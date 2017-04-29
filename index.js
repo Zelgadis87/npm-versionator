@@ -211,6 +211,10 @@ async function isRepositoryClean() {
 	] ).spread( ( diffIndex, diffFiles ) => diffIndex && diffFiles );
 }
 
+async function getRemoteRepositories() {
+	return execute( 'git remote', false ).then( output => output.length > 0 ? output.split( '\n' ) : [] );
+}
+
 async function askVersionType( currentVersion ) {
 	let questions = [
 		{
@@ -388,6 +392,12 @@ async function activate() {
 
 	logger.line();
 
+	let REMOTE_REPOSITORIES = await getRemoteRepositories();
+	if ( REMOTE_REPOSITORIES.length === 0 ) {
+		logger.warn( 'No remote repository found.' );
+		logger.warn( '  Add one with:', 'git remote add <name> <url>' );
+	}
+
 	// TODO: Show the list of commits that would be added. Should be disabled by default.
 	// git log master..develop --oneline
 
@@ -482,8 +492,18 @@ async function activate() {
 
 	logger.info( `Versioning complete.` );
 	logger.info( `Project updated to version: ${ NEXT_VERSION }.` );
+
+	if ( REMOTE_REPOSITORIES.length > 1 ) {
+		logger.info( `To synchronize your changes to the configured Git repositories, use:` );
+		for ( let rep of REMOTE_REPOSITORIES ) {
+			logger.info( `  for ${ rep }:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
+		}
+	} else if ( REMOTE_REPOSITORIES.length === 1 ) {
+		let rep = REMOTE_REPOSITORIES[0];
+		logger.info( `To synchronize your changes to the ${ rep } Git repository, use:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
+	}
+
 	logger.info( `To publish your changes to the npm repository, use:`, 'npm publish' );
-	logger.info( `To synchronize your changes to the git origin repository, use:`, `git push origin master develop ${ RELEASE_TAG }` );
 
 	return true;
 
