@@ -4,9 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "eslint": "eslint -c .eslintrc *.js"
   },
   "author": "Zelgadis87",
   "license": "ISC",
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^3.19.0"
+  }
 }
