@@ -1,0 +1,12 @@
+{
+  "name": "@zelgadis87/npm-versionator",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Zelgadis87",
+  "license": "ISC",
+  "dependencies": {}
+}
