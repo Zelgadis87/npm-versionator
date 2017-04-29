@@ -284,14 +284,39 @@ async function activate() {
 		return doLog( m, c );
 	};
 
+	//
+	// ----------------------------------------------------
+	// Intro section
+	// ----------------------------------------------------
+	// We show the name and version of this application.
+	//
+
 	logger.line();
 
 	let APP_VERSION = await getAppVersion();
 	logger.title( _.pad( `Welcome to Version Generator v${ APP_VERSION }`, LINE_LENGHT ) );
 
+	//
+	// ----------------------------------------------------
+	// Initial checks
+	// ----------------------------------------------------
+	// We require a valid Git repository.
+	// We require a valid NPM project.
+	//
+
+	logger.line();
+
 	await validateGitRepository();
 
 	await validateNpmPackage();
+
+	//
+	// ----------------------------------------------------
+	// Status section
+	// ----------------------------------------------------
+	// We inform the user about the project status.
+	// If any of the settings is not correct, we abort.
+	//
 
 	logger.line();
 
@@ -351,14 +376,33 @@ async function activate() {
 		// There are no changes between master and develop -> throw exception
 		throw new ProcedureError( 'No changes detected since last version.' );
 
+	//
+	// ----------------------------------------------------
+	// Warnings section
+	// ----------------------------------------------------
+	// We inform the user about any potential issues
+	//   detected with its project setup.
+	// At this point, all the required settings are correct
+	//   so no more automatic failures should occur.
+	//
+
 	logger.line();
 
 	// TODO: Show the list of commits that would be added. Should be disabled by default.
 	// git log master..develop --oneline
 
-
 	if ( !fs.existsSync( 'CHANGELOG.md' ) )
 		logger.warn( 'Changelog file missing, it is suggested to create it.' );
+
+	//
+	// ----------------------------------------------------
+	// Input section
+	// ----------------------------------------------------
+	// We ask the user some questions
+	//   about how it wants to proceed with the versioning.
+	// We also ask if he wants this application
+	//   to automatically update some of the project files.
+	//
 
 	logger.line();
 
@@ -381,6 +425,19 @@ async function activate() {
 	// - Switch to master and merge 'releases/vX'
 	// - Tag this version
 	// - Switch to develop and merge 'releases/vX'
+
+	//
+	// ----------------------------------------------------
+	// Flow section
+	// ----------------------------------------------------
+	// We modify the repository and metadata
+	//   for the new version.
+	// Since we are editing low-level files, we have no
+	//   guarantee that all passes could be completed.
+	//
+	// TODO: We should however try our best to rollback
+	//   the changes if something happens.
+	//
 
 	logger.line( true );
 
@@ -409,6 +466,17 @@ async function activate() {
 	await execute( `git checkout develop` );
 	await execute( `git merge --no-ff ${ RELEASE_BRANCH }` );
 	await execute( `git branch -d ${ RELEASE_BRANCH }` );
+
+	//
+	// ----------------------------------------------------
+	// Output section
+	// ----------------------------------------------------
+	// All operations have been completed succesfully.
+	// The user project has been updated to the
+	//   requested version.
+	// We update the user on how it might want to proceed
+	//   to release the new version of its project.
+	//
 
 	logger.line();
 
