@@ -131,8 +131,6 @@ async function execute( cmd, showInConsole ) {
 }
 
 async function getAppVersion() {
-	if ( process.env.npm_package_version !== undefined )
-		return process.env.npm_package_version;
 	return require( './package' ).version;
 }
 
