@@ -330,7 +330,7 @@ async function activate() {
 	} else {
 		let sv = semver( VERSION ), sp = semver( PACKAGE_VERSION );
 		if ( sv.major !== sp.major || sv.minor !== sp.minor || sv.patch !== sp.patch )
-			throw new ProcedureError( `Version mismatched, please tag version ${ PACKAGE_VERSION } on your Git repository.` );
+			throw new ProcedureError( `Version mismatched, please tag version ${ PACKAGE_VERSION } on your Git repository:`, `git tag ${ PACKAGE_VERSION } <commit_id>` );
 		VERSION = PACKAGE_VERSION;
 	}
 
