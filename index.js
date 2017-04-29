@@ -56,10 +56,10 @@ let logger = ( function() {
 	me.info = info;
 	me.error = error;
 	me.warn = warn;
-	me.log = log;
 	me.line = line;
 	me.command = command;
 	me.title = title;
+	me.out = out;
 
 	// Implementation
 
@@ -102,22 +102,6 @@ let logger = ( function() {
 
 	function command( m ) {
 		out( combine( m, prefix( '>' ), chalk.cyan, newline ) );
-	}
-
-	function log( error, x ) {
-		if ( x === null || x === undefined )
-			return;
-		if ( x.indexOf( '\n' ) > -1 ) {
-			_.each( x.split( '\n' ), data => log( error, data ) );
-			return;
-		} else {
-			out( '| ' );
-			if ( x.trim().length === 0 ) {
-				line( true );
-			} else {
-				out( combine( x.trim(), chalk.bold, error ? chalk.red : chalk.white, newline ) );
-			}
-		}
 	}
 
 	function title( m ) {
@@ -234,15 +218,37 @@ async function getRemoteRepositories() {
 }
 
 async function npmTest() {
+
+	let log = ( error, x, lineEnding = false ) => {
+		if ( x === null || x === undefined )
+			return;
+		let lines = x.split( '\n' ),
+			style = chalk.bold,
+			newline = false;
+		for ( let line of lines ) {
+			if ( newline ) {
+				logger.line( true );
+				logLine();
+			}
+			logger.out( style( line ) );
+			newline = true;
+		}
+	};
+	let logLine = () => logger.out( chalk.cyan( '    ' ) );
+
 	return new Bluebird( ( resolve, reject ) => {
-		let test = child_process.spawn( /^win/.test( process.platform ) ? 'npm.cmd' : 'npm', [ 'test' ] );
-		test.stdout.on( 'data', ( data ) => logger.log( false, data.toString() ) );
-		test.stderr.on( 'data', ( data ) => logger.log( true, data.toString() ) );
+
+		logger.info( 'Testing NPM package: ', 'npm test -- --color'  );
+		logLine();
+
+		let test = child_process.spawn( /^win/.test( process.platform ) ? 'npm.cmd' : 'npm', [ 'test', '--', '--color' ] );
+		test.stdout.on( 'data', data => log( false, data.toString() ) );
+		test.stderr.on( 'data', data => log( true, data.toString() ) );
 		test.on( 'close', ( code ) => {
-			logger.log( code !== 0, '=> ' + code );
-			logger.line();
+			logger.line( true );
 			code === 0 ? resolve() : reject();
 		} );
+
 	} );
 }
 
@@ -421,8 +427,9 @@ async function activate() {
 
 	logger.line();
 
-	logger.command( 'npm test' );
-	await npmTest().catch( err => {
+	await npmTest().then( () => {
+		logger.info( 'All tests passed.' );
+	}, err => {
 		throw new ProcedureError( 'Tests failed.' );
 	} );
 
