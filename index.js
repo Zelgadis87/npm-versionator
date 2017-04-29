@@ -347,8 +347,10 @@ async function activate() {
 	// git log master..develop --oneline
 
 
-	if ( !fs.existsSync( 'CHANGELOG.md' ) )
+	if ( !fs.existsSync( 'CHANGELOG.md' ) ) {
+		logger.line();
 		logger.warn( 'Changelog file missing, it is suggested to create it.' );
+	}
 
 	logger.line();
 
