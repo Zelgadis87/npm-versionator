@@ -1,4 +1,7 @@
 
+## v0.3.0 (2017/04/30)
+- Add: Enforced NPM tests before proceeding with a new version.
+
 ## v0.2.1 (2017/04/30)
 - Fix: Computed count of untracked and changed git files was 1 lower of the actual value
 
