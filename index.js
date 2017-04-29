@@ -15,7 +15,6 @@ const Bluebird = extendBluebird( require( 'bluebird' ) )
 const SEMVER_PATCH = 'patch'
 	, SEMVER_MINOR = 'minor'
 	, SEMVER_MAJOR = 'major'
-	, SEMVER_VALUES = [ SEMVER_PATCH, SEMVER_MINOR, SEMVER_MAJOR ]
 	;
 
 function extendInquirer( inquirer ) {
@@ -218,8 +217,13 @@ async function askVersionType( currentVersion ) {
 			name: 'type',
 			type: 'list',
 			message: 'Please select versioning type:',
-			choices: SEMVER_VALUES
-		}, {
+			choices: [
+				SEMVER_PATCH,
+				SEMVER_MINOR,
+				SEMVER_MAJOR
+			]
+		},
+		{
 			name: 'confirm',
 			type: 'confirm',
 			message: ( answers ) => `This will update this module to version: ${ semver.inc( currentVersion, answers.type ) }. Confirm? `,
@@ -239,7 +243,7 @@ async function askForChangelog( versionType, versionNumber ) {
 			name: 'change',
 			type: 'confirm',
 			message: 'Do you wish to update the changelog?',
-			when: versionType === SEMVER_PATCH || versionType === SEMVER_MINOR,
+			when: versionType !== SEMVER_MAJOR,
 			default: versionType === SEMVER_MINOR
 		}, {
 			name: 'entry',
