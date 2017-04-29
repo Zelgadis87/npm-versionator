@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 
 const Bluebird = extendBluebird( require( 'bluebird' ) )
 	, _ = require( 'lodash' )
