@@ -63,6 +63,8 @@ let logger = ( function() {
 
 	// Implementation
 
+	let isNewLine = false;
+
 	function out( m ) {
 		process.stdout.write( m );
 	}
@@ -71,15 +73,18 @@ let logger = ( function() {
 		process.stderr.write( m );
 	}
 
-	function line() {
+	function line( forced ) {
+		if ( isNewLine && !forced )
+			return;
 		out( '\n' );
+		isNewLine = true;
 	}
 
 	let prepend = ( a ) => ( b ) => a + b;
 	let append = ( b ) => ( a ) => a + b;
 
 	let prefix = ( x ) => prepend( x + ' ' );
-	let newline = append( '\n' );
+	let newline = ( x ) => { isNewLine = false; return x + '\n'; };
 
 	let combine = ( x, ...fns ) => ( x === null || x === undefined ) ? '' : _.flow( fns )( x );
 
@@ -96,7 +101,7 @@ let logger = ( function() {
 	}
 
 	function command( m ) {
-		out( combine( m, prefix( '>' ), chalk.cyan ) + '\n' );
+		out( combine( m, prefix( '>' ), chalk.cyan, newline ) );
 	}
 
 	function title( m ) {
@@ -342,14 +347,14 @@ async function activate() {
 		// There are no changes between master and develop -> throw exception
 		throw new ProcedureError( 'No changes detected since last version.' );
 
+	logger.line();
+
 	// TODO: Show the list of commits that would be added. Should be disabled by default.
 	// git log master..develop --oneline
 
 
-	if ( !fs.existsSync( 'CHANGELOG.md' ) ) {
-		logger.line();
+	if ( !fs.existsSync( 'CHANGELOG.md' ) )
 		logger.warn( 'Changelog file missing, it is suggested to create it.' );
-	}
 
 	logger.line();
 
@@ -373,7 +378,7 @@ async function activate() {
 	// - Tag this version
 	// - Switch to develop and merge 'releases/vX'
 
-	logger.line();
+	logger.line( true );
 
 	let RELEASE_BRANCH = `releases/${ NEXT_VERSION}`;
 	let RELEASE_TAG = `v${ NEXT_VERSION }`;
@@ -416,7 +421,7 @@ Bluebird
 	.try( activate )
 	.then( () => process.exit( 0 ) )
 	.catch( ( err ) => {
-		logger.line();
+		logger.line( true );
 		if ( err instanceof ProcedureError ) {
 			logger.error( err.message, err.command );
 		} else {
