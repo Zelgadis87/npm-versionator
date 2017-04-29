@@ -56,6 +56,7 @@ let logger = ( function() {
 	me.info = info;
 	me.error = error;
 	me.warn = warn;
+	me.log = log;
 	me.line = line;
 	me.command = command;
 	me.title = title;
@@ -101,6 +102,22 @@ let logger = ( function() {
 
 	function command( m ) {
 		out( combine( m, prefix( '>' ), chalk.cyan, newline ) );
+	}
+
+	function log( error, x ) {
+		if ( x === null || x === undefined )
+			return;
+		if ( x.indexOf( '\n' ) > -1 ) {
+			_.each( x.split( '\n' ), data => log( error, data ) );
+			return;
+		} else {
+			out( '| ' );
+			if ( x.trim().length === 0 ) {
+				line( true );
+			} else {
+				out( combine( x.trim(), chalk.bold, error ? chalk.red : chalk.white, newline ) );
+			}
+		}
 	}
 
 	function title( m ) {
@@ -214,6 +231,19 @@ async function isRepositoryClean() {
 
 async function getRemoteRepositories() {
 	return execute( 'git remote', false ).then( output => output.length > 0 ? output.split( '\n' ) : [] );
+}
+
+async function npmTest() {
+	return new Bluebird( ( resolve, reject ) => {
+		let test = child_process.spawn( /^win/.test( process.platform ) ? 'npm.cmd' : 'npm', [ 'test' ] );
+		test.stdout.on( 'data', ( data ) => logger.log( false, data.toString() ) );
+		test.stderr.on( 'data', ( data ) => logger.log( true, data.toString() ) );
+		test.on( 'close', ( code ) => {
+			logger.log( code !== 0, '=> ' + code );
+			logger.line();
+			code === 0 ? resolve() : reject();
+		} );
+	} );
 }
 
 async function askVersionType( currentVersion ) {
@@ -380,6 +410,21 @@ async function activate() {
 	if ( DIFF_FILES === 0 )
 		// There are no changes between master and develop -> throw exception
 		throw new ProcedureError( 'No changes detected since last version.' );
+
+	//
+	// ----------------------------------------------------
+	// Tests section
+	// ----------------------------------------------------
+	// We run the configured NPM test tasks.
+	// If any of these fails, we abort the process.
+	//
+
+	logger.line();
+
+	logger.command( 'npm test' );
+	await npmTest().catch( err => {
+		throw new ProcedureError( 'Tests failed.' );
+	} );
 
 	//
 	// ----------------------------------------------------
