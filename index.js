@@ -193,13 +193,14 @@ async function countDiffCommits() {
 }
 
 async function countDiffFiles() {
-	return execute( 'git log master..develop --oneline', false ).then( countLines );
+	return execute( 'git diff --name-only master..develop', false ).then( countLines );
 }
 
 function countLines( contents ) {
-	if ( contents.length === 0 ) return 0;
-	for ( var count = -1, index = 0; index != -1; count++, index = contents.indexOf( '\n', index + 1 ) );
-	return count;
+	let count = -1;
+	if ( contents.length > 0 )
+		for ( let index = 0; index != -1; count++, index = contents.indexOf( '\n', index + 1 ) );
+	return count + 1;
 }
 
 async function isRepositoryClean() {
