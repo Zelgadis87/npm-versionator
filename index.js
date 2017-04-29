@@ -278,7 +278,7 @@ async function activate() {
 	logger.line();
 
 	let APP_VERSION = await getAppVersion();
-	logger.title( _.pad( `Welcome to version generator v${ APP_VERSION }.`, LINE_LENGHT ) );
+	logger.title( _.pad( `Welcome to Version Generator v${ APP_VERSION }`, LINE_LENGHT ) );
 
 	await validateGitRepository();
 
