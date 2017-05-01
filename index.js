@@ -256,7 +256,7 @@ async function npmTest() {
 	} );
 }
 
-async function askVersionType( currentVersion ) {
+async function askVersionType( currentVersion, diffFiles ) {
 
 	let isPrerelease = currentVersion.indexOf( '-' ) > -1;
 	let major = semver.major( currentVersion );
@@ -275,14 +275,29 @@ async function askVersionType( currentVersion ) {
 
 		let choices = [];
 
-		choices.push( choice( semverFormat( 'New prerelease', SEMVER_PRE_RELEASE ), [ SEMVER_PRE_RELEASE ] ) );
-		if ( !isAlpha && !isBeta && !isRC )
-			choices.push( choice( semverFormat( 'Switch to Alpha', SEMVER_PRE_RELEASE, 'alpha' ), [ SEMVER_PRE_RELEASE, 'alpha' ] ) );
-		if ( !isBeta && !isRC )
-			choices.push( choice( semverFormat( 'Switch to Beta', SEMVER_PRE_RELEASE, 'beta' ), [ SEMVER_PRE_RELEASE, 'beta' ] ) );
-		if ( !isRC )
-			choices.push( choice( semverFormat( 'Switch to Release Candidate', SEMVER_PRE_RELEASE, 'rc' ), [ SEMVER_PRE_RELEASE, 'rc' ] ) );
-		choices.push( choice( semverFormat( 'Complete prerelease', prereleaseType ), [ prereleaseType ] ) );
+		if ( isRC && diffFiles === 0 ) {
+			choices.push( choice( semverFormat( 'Release this release candidate', prereleaseType ), [ prereleaseType ] ) );
+		} else {
+
+			if ( isAlpha )
+				choices.push( choice( semverFormat( 'New alpha version', SEMVER_PRE_RELEASE ), [ SEMVER_PRE_RELEASE ] ) );
+			else if ( isBeta )
+				choices.push( choice( semverFormat( 'New beta version', SEMVER_PRE_RELEASE ), [ SEMVER_PRE_RELEASE ] ) );
+			else if ( isRC )
+				choices.push( choice( semverFormat( 'New release candidate', SEMVER_PRE_RELEASE ), [ SEMVER_PRE_RELEASE ] ) );
+
+			if ( !isAlpha && !isBeta && !isRC )
+				choices.push( choice( semverFormat( 'Switch to Alpha', SEMVER_PRE_RELEASE, 'alpha' ), [ SEMVER_PRE_RELEASE, 'alpha' ] ) );
+
+			if ( !isBeta && !isRC )
+				choices.push( choice( semverFormat( 'Switch to Beta', SEMVER_PRE_RELEASE, 'beta' ), [ SEMVER_PRE_RELEASE, 'beta' ] ) );
+
+			if ( !isRC )
+				choices.push( choice( semverFormat( 'Switch to Release Candidate', SEMVER_PRE_RELEASE, 'rc' ), [ SEMVER_PRE_RELEASE, 'rc' ] ) );
+
+			choices.push( choice( semverFormat( 'Complete prerelease', prereleaseType ), [ prereleaseType ] ) );
+
+		}
 
 		return inquirer.prompt( {
 			name: 'value',
@@ -486,20 +501,22 @@ async function activate() {
 		VERSION = PACKAGE_VERSION;
 	}
 
+	let IS_RELEASE_CANDIDATE = /-rc\.[0-9]+$/.test( VERSION );
+
 	let UNTRACKED = await countUntrackedFiles();
 	log( `Untracked files detected:`, UNTRACKED, UNTRACKED > 0 ? 'warn' : 'info' );
 
 	let DIFF_COMMITS = await countDiffCommits();
 	log( `Commits since last release:`, DIFF_COMMITS, DIFF_COMMITS === 0 ? 'warn' : 'info' );
 
-	if ( DIFF_COMMITS === 0 )
+	if ( DIFF_COMMITS === 0 && !IS_RELEASE_CANDIDATE )
 		// There are no commits between master and develop -> throw exception
 		throw new ProcedureError( 'No commits detected since last version.' );
 
 	let DIFF_FILES = await countDiffFiles();
-	log( `Files changed since last release:`, DIFF_FILES, DIFF_FILES === 0 ? 'warn' : 'info' );
+	log( `Files changed since last release:`, DIFF_FILES, DIFF_FILES === 0 && !IS_RELEASE_CANDIDATE ? 'warn' : 'info' );
 
-	if ( DIFF_FILES === 0 )
+	if ( DIFF_FILES === 0 && !IS_RELEASE_CANDIDATE )
 		// There are no changes between master and develop -> throw exception
 		throw new ProcedureError( 'No changes detected since last version.' );
 
@@ -555,7 +572,7 @@ async function activate() {
 
 	logger.line();
 
-	let [ VERSION_TYPE, PRERELEASE_IDENTIFIER ] = await askVersionType( VERSION );
+	let [ VERSION_TYPE, PRERELEASE_IDENTIFIER ] = await askVersionType( VERSION, DIFF_FILES );
 
 	let NEXT_VERSION = semver.inc( VERSION, VERSION_TYPE, PRERELEASE_IDENTIFIER );
 
