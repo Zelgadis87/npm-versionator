@@ -3,18 +3,18 @@
 - Feature: Allow prereleases without any commits
 
 ## v0.4.0-alpha.0 (2017/05/01 14:59)
-- Add: Implemented prerelease versioning, supports: alpha, beta, RC 
+- Feature: Implemented prerelease versioning, supports: alpha, beta, RC
 - Change: Changelog.md releases are now timestamped
 
 ## v0.3.0 (2017/04/30)
-- Add: Enforced NPM tests before proceeding with a new version.
+- Feature: Enforced NPM tests before proceeding with a new version.
 
 ## v0.2.1 (2017/04/30)
 - Fix: Computed count of untracked and changed git files is 1 less than the actual value
 
 ## v0.2.0 (2017/04/29)
-- Add: New warning for missing Git remotes
-- Add: Explanation on how to push changes changed to use the project Git remotes
+- Feature: New warning for missing Git remotes
+- Feature: Explanation on how to push changes changed to use the project Git remotes
 
 ## v0.1.0 (2017/04/29)
 - Initial version.
