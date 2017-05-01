@@ -576,6 +576,8 @@ async function activate() {
 	// TODO: Show the list of commits that would be added. Should be disabled by default.
 	// git log master..develop --oneline
 
+	if ( !fs.existsSync( '.gitignore' ) )
+		logger.warn( '.gitignore file missing, it is suggested to create it before committing unwanted files.' );
 	if ( !fs.existsSync( 'CHANGELOG.md' ) )
 		logger.warn( 'CHANGELOG.md file missing, it is suggested to create it before a public release.' );
 	if ( !fs.existsSync( 'README.md' ) )
