@@ -418,7 +418,7 @@ function writeChangelogEntry( entry ) {
 
 async function activate() {
 
-	let LINE_LENGHT = 40;
+	let LINE_LENGHT = 45;
 	let log = ( m, c, level = 'info' ) => {
 		let doLog = logger[ level ];
 		if ( m === null || m === undefined )
