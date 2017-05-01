@@ -656,7 +656,7 @@ async function activate() {
 	}
 
 	if ( _.includes( [ SEMVER_PRE_PATCH, SEMVER_PRE_MINOR, SEMVER_PRE_MAJOR, SEMVER_PRE_RELEASE ], VERSION_TYPE ) ) {
-		logger.warn( `To publish your unstable changes to the npm repository, use:`, 'npm publish --tag=unstable' );
+		logger.info( `To publish your unstable changes to the npm repository, use:`, 'npm publish --tag=unstable' );
 	} else {
 		logger.info( `To publish your changes to the npm repository, use:`, 'npm publish --tag=latest' );
 	}
