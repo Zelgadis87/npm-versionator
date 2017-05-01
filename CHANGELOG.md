@@ -1,4 +1,8 @@
 
+## v0.4.0-alpha.2 (2017/05/01 20:59)
+- Feature: Warn the user in case of missing README.md, LICENSE or .gitignore files 
+- Feature: Added README.md file to the project
+
 ## v0.4.0-alpha.1 (2017/05/01 19:08)
 - Feature: Allow prereleases without any commits
 
