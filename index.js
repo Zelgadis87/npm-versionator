@@ -271,16 +271,19 @@ async function askVersionType( currentVersion ) {
 		let prereleaseType = ( patch === 0 ? ( minor === 0 ? SEMVER_MAJOR : SEMVER_MINOR ) : SEMVER_PATCH );
 		let isAlpha = isPrerelease && currentVersion.indexOf( '-alpha.' ) > -1;
 		let isBeta = isPrerelease && currentVersion.indexOf( '-beta.' ) > -1;
+		let isRC = isPrerelease && currentVersion.indexOf( '-rc.' ) > -1;
 
 		let choices = [
 			choice( semverFormat( 'New prerelease', SEMVER_PRE_RELEASE ), [ SEMVER_PRE_RELEASE ] ),
 			choice( semverFormat( 'Complete prerelease', prereleaseType ), [ prereleaseType ] )
 		];
 
-		if ( !isAlpha && !isBeta )
-			choices.push( choice( semverFormat( 'Switch to alpha', SEMVER_PRE_RELEASE, 'alpha' ), [ SEMVER_PRE_RELEASE, 'alpha' ] ) );
-		if ( isAlpha )
-			choices.push( choice( semverFormat( 'Switch to beta', SEMVER_PRE_RELEASE, 'beta' ), [ SEMVER_PRE_RELEASE, 'beta' ] ) );
+		if ( !isRC )
+			choices.push( choice( semverFormat( 'Switch to Release Candidate', SEMVER_PRE_RELEASE, 'rc' ), [ SEMVER_PRE_RELEASE, 'rc' ] ) );
+		if ( !isBeta && !isRC )
+			choices.push( choice( semverFormat( 'Switch to Beta', SEMVER_PRE_RELEASE, 'beta' ), [ SEMVER_PRE_RELEASE, 'beta' ] ) );
+		if ( !isAlpha && !isBeta && !isRC )
+			choices.push( choice( semverFormat( 'Switch to Alpha', SEMVER_PRE_RELEASE, 'alpha' ), [ SEMVER_PRE_RELEASE, 'alpha' ] ) );
 
 		return inquirer.prompt( {
 			name: 'value',
@@ -332,7 +335,8 @@ async function askVersionType( currentVersion ) {
 			let choices = [
 				option_back,
 				identifierChoice( 'Alpha', 'alpha' ),
-				identifierChoice( 'Beta', 'beta' )
+				identifierChoice( 'Beta', 'beta' ),
+				identifierChoice( 'Release Candidate', 'rc' )
 			];
 			return inquirer.prompt( {
 				name: 'value',
