@@ -503,6 +503,8 @@ async function activate() {
 	}
 
 	let IS_RELEASE_CANDIDATE = /-rc\.[0-9]+$/.test( LAST_TAG );
+	if ( IS_RELEASE_CANDIDATE )
+		log( `Release candidate mode:`, 'enabled', 'info' );
 
 	let UNTRACKED = await countUntrackedFiles();
 	log( `Untracked files detected:`, UNTRACKED, UNTRACKED > 0 ? 'warn' : 'info' );
