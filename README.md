@@ -1,12 +1,12 @@
 
 # What is it?
-This library is an opinionated tool for helping users manage their versioning of an NPM packing withing a Git repository.
+This library is an opinionated tool for helping users manage their versioning of an NPM package.
 
 # How does it work?
 This package exposes a simple Command Line Interface (CLI) for managing the version of a NPM package.
-The interface will guide the user on what it should do to create a new version of his package.
-Common erronoeus situations are automatically detected, and instructions on how to solve them are given to the user, if appropriate.
-The tool will also enforce some good behaviors, like preventing to make a release from a repository that contains uncommited work, or enforcing that all NPM configured tests are successful.
+The interface will guide the user on what it should do to create a new version of their package.
+Common erronoeus situations are automatically detected, and instructions on how to solve them are given to the user, when appropriate.
+The tool will also enforce some good behaviors, like preventing to make a release from a repository that contains uncommited work, or enforcing that all NPM configured tests are successful before tagging the release.
 
 # Compabilities
 This package is supposed to work both for new NPM packages and for existing ones.
@@ -17,13 +17,17 @@ However, as the tool is opinionated, a few policies are enforced on your package
   - The *master* branch is reserved for public versions and work MUST NOT be commited to it.
   - Feature branches and other Git techniques are allowed, but their usage MUST NOT conflict with the above two specifications.
 - Tests to perform before a release SHOULD be specified using the `test` NPM task, as that is what gets launched to ensure a valid release.
+- Releases SHOULD graduate from alpha to beta to release candidate prereleases when possible.
+  - When in a release candidate, a full release is allowed ONLY if the are no changes between the current working tree and the latest release candidate
 
 # What does it do?
 At the most fundamental level, this tool will tag a new version on the Git repository and on the NPM package.json file whenever the user decides to (pre)release a new version of its software.
 
-When creating a release, all development made to *develop* is merged on a new release branch, named after the new version number. On this branch, the CHANGELOG.md file is updated with the new features and fixes that are getting released and the NPM package is increased. The work is finally merged to *master*, where it is tagged, and back on *develop*.
+When creating a release, all development made to *develop* is merged on a new release branch, named after the new version number. On this branch, the CHANGELOG.md file is updated with the new features and fixes that are getting released and the NPM package is increased. The work is finally merged to *master*, where it is tagged, and it is merged back on *develop*.
 
 When creating a pre-release version, the work gets tagged directly on the *develop* branch and instructions are given to the developer on how to publish its unstable package, without breaking existing dependants libraries.
+
+In both cases, the tool will ensure that the new version passes the configured NPM tests before proceeding.
 
 # How to use it?
 1. Install this package as dev-dependency of your package, using:
