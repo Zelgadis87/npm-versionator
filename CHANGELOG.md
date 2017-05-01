@@ -1,4 +1,7 @@
 
+## v0.4.0-alpha.3 (2017/05/01 21:01)
+- Feature: Added LICENSE file to the project
+
 ## v0.4.0-alpha.2 (2017/05/01 20:59)
 - Feature: Warn the user in case of missing README.md, LICENSE or .gitignore files 
 - Feature: Added README.md file to the project
