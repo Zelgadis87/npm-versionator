@@ -648,6 +648,12 @@ async function activate() {
 		logger.info( `To synchronize your changes to the ${ rep } Git repository, use:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
 	}
 
+	if ( _.includes( [ SEMVER_PRE_PATCH, SEMVER_PRE_MINOR, SEMVER_PRE_MAJOR, SEMVER_PRE_RELEASE ], VERSION_TYPE ) ) {
+		logger.warn( `To publish your unstable changes to the npm repository, use:`, 'npm publish --tag=unstable' );
+	} else {
+		logger.info( `To publish your changes to the npm repository, use:`, 'npm publish --tag=latest' );
+	}
+
 	logger.info( `To publish your changes to the npm repository, use:`, 'npm publish' );
 
 	return true;
