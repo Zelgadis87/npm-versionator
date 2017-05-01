@@ -574,18 +574,6 @@ async function activate() {
 		throw new ProcedureError( 'Operation aborted by the user.' );
 
 	//
-	// From here we start modifying the Git repository.
-	// Should somehow rollback on failure.
-	//
-	// Flow:
-	// - Create new branch 'releases/vX' for this release.
-	// - Finalize CHANGELOG.md
-	// - Update package.json
-	// - Switch to master and merge 'releases/vX'
-	// - Tag this version
-	// - Switch to develop and merge 'releases/vX'
-
-	//
 	// ----------------------------------------------------
 	// Flow section
 	// ----------------------------------------------------
@@ -597,6 +585,14 @@ async function activate() {
 	// TODO: We should however try our best to rollback
 	//   the changes if something happens.
 	//
+	// Flow:
+	// - Create new branch 'releases/vX' for this release.
+	// - Finalize CHANGELOG.md
+	// - Update package.json
+	// - Switch to master and merge 'releases/vX'
+	// - Tag this version
+	// - Switch to develop and merge 'releases/vX'
+
 
 	logger.line( true );
 
