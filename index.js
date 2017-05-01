@@ -518,11 +518,11 @@ async function activate() {
 	log( `Untracked files detected:`, UNTRACKED, UNTRACKED > 0 ? 'warn' : 'info' );
 
 	let DIFF_COMMITS = await countDiffCommits( tagFound ? LAST_TAG : 'master' );
-	log( `Commits since ${ VERSION }:`, DIFF_COMMITS, DIFF_COMMITS === 0 ? 'warn' : 'info' );
+	log( `Commits since ${ VERSION }:`, DIFF_COMMITS, DIFF_COMMITS === 0 && !IS_PRERELEASE_VERSION ? 'warn' : 'info' );
 
 	let DIFF_MASTER_COMMITS = await countDiffCommits( 'master' );
 	if ( DIFF_MASTER_COMMITS !== DIFF_COMMITS )
-		log( `Commits since last stable release:`, DIFF_MASTER_COMMITS, DIFF_MASTER_COMMITS === 0 ? 'warn' : 'info' );
+		log( `Commits since last stable release:`, DIFF_MASTER_COMMITS, DIFF_MASTER_COMMITS === 0 && !IS_PRERELEASE_VERSION ? 'warn' : 'info' );
 
 	if ( DIFF_COMMITS === 0 && !IS_PRERELEASE_VERSION )
 		// There are no commits between master and develop -> throw exception
@@ -533,7 +533,7 @@ async function activate() {
 
 	let DIFF_MASTER_FILES = await countDiffFiles( 'master' );
 	if ( DIFF_MASTER_FILES !== DIFF_FILES )
-		log( `Files changed since last stable release:`, DIFF_MASTER_COMMITS, DIFF_MASTER_COMMITS === 0 ? 'warn' : 'info' );
+		log( `Files changed since last stable release:`, DIFF_MASTER_COMMITS, DIFF_MASTER_COMMITS === 0 && !IS_PRERELEASE_VERSION ? 'warn' : 'info' );
 
 	if ( DIFF_FILES === 0 && !IS_PRERELEASE_VERSION )
 		// There are no changes between master and develop -> throw exception
