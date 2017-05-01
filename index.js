@@ -275,8 +275,13 @@ async function askVersionType( currentVersion, diffFiles ) {
 
 		let choices = [];
 
-		if ( isRC && diffFiles === 0 ) {
-			choices.push( choice( semverFormat( 'Release this release candidate', prereleaseType ), [ prereleaseType ] ) );
+		if ( diffFiles === 0 ) {
+			if ( isAlpha )
+				choices.push( choice( semverFormat( 'Switch to Beta', SEMVER_PRE_RELEASE, 'beta' ), [ SEMVER_PRE_RELEASE, 'beta' ] ) );
+			if ( isBeta || isAlpha )
+				choices.push( choice( semverFormat( 'Switch to Release Candidate', SEMVER_PRE_RELEASE, 'rc' ), [ SEMVER_PRE_RELEASE, 'rc' ] ) );
+			if ( isRC )
+				choices.push( choice( semverFormat( 'Release this release candidate', prereleaseType ), [ prereleaseType ] ) );
 		} else {
 
 			if ( isAlpha )
@@ -502,24 +507,35 @@ async function activate() {
 		VERSION = LAST_TAG;
 	}
 
-	let IS_RELEASE_CANDIDATE = /-rc\.[0-9]+$/.test( LAST_TAG );
-	if ( IS_RELEASE_CANDIDATE )
-		log( `Release candidate mode:`, 'enabled', 'info' );
+	let match = LAST_TAG.match( /-(alpha|beta|rc)\.([0-9])+$/ );
+	let IS_PRERELEASE_VERSION = match !== null;
+	let [ PRERELEASE_TYPE, PRERELEASE_NUMBER ] = match ? [ match[1], match[2] ] : [ null, null ];
+
+	if ( IS_PRERELEASE_VERSION )
+		log( `Prerelease mode:`, PRERELEASE_TYPE, 'info' );
 
 	let UNTRACKED = await countUntrackedFiles();
 	log( `Untracked files detected:`, UNTRACKED, UNTRACKED > 0 ? 'warn' : 'info' );
 
 	let DIFF_COMMITS = await countDiffCommits( tagFound ? LAST_TAG : 'master' );
-	log( `Commits since last release:`, DIFF_COMMITS, DIFF_COMMITS === 0 ? 'warn' : 'info' );
+	log( `Commits since ${ VERSION }:`, DIFF_COMMITS, DIFF_COMMITS === 0 ? 'warn' : 'info' );
 
-	if ( DIFF_COMMITS === 0 && !IS_RELEASE_CANDIDATE )
+	let DIFF_MASTER_COMMITS = await countDiffCommits( 'master' );
+	if ( DIFF_MASTER_COMMITS !== DIFF_COMMITS )
+		log( `Commits since last stable release:`, DIFF_MASTER_COMMITS, DIFF_MASTER_COMMITS === 0 ? 'warn' : 'info' );
+
+	if ( DIFF_COMMITS === 0 && !IS_PRERELEASE_VERSION )
 		// There are no commits between master and develop -> throw exception
 		throw new ProcedureError( 'No commits detected since last version.' );
 
 	let DIFF_FILES = await countDiffFiles( tagFound ? LAST_TAG : 'master' );
-	log( `Files changed since last release:`, DIFF_FILES, DIFF_FILES === 0 && !IS_RELEASE_CANDIDATE ? 'warn' : 'info' );
+	log( `Files changed since ${ VERSION }:`, DIFF_FILES, DIFF_FILES === 0 && !IS_PRERELEASE_VERSION ? 'warn' : 'info' );
 
-	if ( DIFF_FILES === 0 && !IS_RELEASE_CANDIDATE )
+	let DIFF_MASTER_FILES = await countDiffFiles( 'master' );
+	if ( DIFF_MASTER_FILES !== DIFF_FILES )
+		log( `Files changed since last stable release:`, DIFF_MASTER_COMMITS, DIFF_MASTER_COMMITS === 0 ? 'warn' : 'info' );
+
+	if ( DIFF_FILES === 0 && !IS_PRERELEASE_VERSION )
 		// There are no changes between master and develop -> throw exception
 		throw new ProcedureError( 'No changes detected since last version.' );
 
