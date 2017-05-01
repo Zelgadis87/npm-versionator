@@ -1,12 +1,12 @@
 {
   "name": "@zelgadis87/npm-versionator",
   "version": "0.4.0-alpha.1",
-  "description": "",
+  "description": "An opinionated CLI tool to help versioning your NPM package",
   "bin": "index.js",
   "scripts": {
     "start": "node index.js",
-    "eslint": "eslint -c .eslintrc *.js",
-    "preversion": "eslint -c .eslintrc *.js --fix"
+    "test": "npm run eslint",
+    "eslint": "eslint -c .eslintrc *.js"
   },
   "author": "Zelgadis87",
   "license": "ISC",
