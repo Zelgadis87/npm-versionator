@@ -15,7 +15,7 @@ However, as the tool is opinionated, a few policies are enforced on your package
 - The Git repository MUST follow the [GitFlow](http://nvie.com/posts/a-successful-git-branching-model/) convention and in particular:
   - Development of the package MUST be made on the Git *develop* branch or merged to it.
   - The *master* branch is reserved for public versions and work MUST NOT be commited to it.
-  - The software developer CAN choose to use feature branches and other Git techniques, but in a way that MUST NOT conflict with the above two specifications.
+  - Feature branches and other Git techniques are allowed, but their usage MUST NOT conflict with the above two specifications.
 - Tests to perform before a release SHOULD be specified using the `test` NPM task, as that is what gets launched to ensure a valid release.
 
 # What does it do?
