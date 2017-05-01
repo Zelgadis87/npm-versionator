@@ -1,4 +1,8 @@
 
+## v0.4.0-alpha.0 (2017/05/01 14:59)
+- Add: Implemented prerelease versioning, supports: alpha, beta, RC 
+- Change: Changelog.md releases are now timestamped
+
 ## v0.3.0 (2017/04/30)
 - Add: Enforced NPM tests before proceeding with a new version.
 
