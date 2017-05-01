@@ -558,6 +558,9 @@ async function activate() {
 
 	let CHANGELOG = await askForChangelog( VERSION_TYPE, NEXT_VERSION );
 
+	if ( CHANGELOG )
+		fs.writeFileSync( 'CHANGELOG.md.draft', CHANGELOG, 'UTF-8' );
+
 	//
 	// ----------------------------------------------------
 	// Confirm section
@@ -608,6 +611,7 @@ async function activate() {
 		await execute( `git checkout -b ${ RELEASE_BRANCH }` );
 		await execute( `git add CHANGELOG.md` );
 		await execute( `git commit -m "Updated changelog for v${ NEXT_VERSION }"` );
+		await execute( `rm CHANGELOG.md.draft` );
 	} else {
 		await execute( `git checkout -b ${ RELEASE_BRANCH }` );
 	}
