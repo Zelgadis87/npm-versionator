@@ -15,6 +15,10 @@ const Bluebird = extendBluebird( require( 'bluebird' ) )
 const SEMVER_PATCH = 'patch'
 	, SEMVER_MINOR = 'minor'
 	, SEMVER_MAJOR = 'major'
+	, SEMVER_PRE_MAJOR = 'premajor'
+	, SEMVER_PRE_MINOR = 'preminor'
+	, SEMVER_PRE_PATCH = 'prepatch'
+	, SEMVER_PRE_RELEASE = 'prerelease'
 	;
 
 function extendInquirer( inquirer ) {
@@ -253,28 +257,96 @@ async function npmTest() {
 }
 
 async function askVersionType( currentVersion ) {
-	let questions = [
-		{
-			name: 'type',
-			type: 'list',
-			message: 'Please select versioning type:',
-			choices: [
-				SEMVER_PATCH,
-				SEMVER_MINOR,
-				SEMVER_MAJOR
-			]
-		},
-		{
-			name: 'confirm',
-			type: 'confirm',
-			message: ( answers ) => `This will update this module to version: ${ semver.inc( currentVersion, answers.type ) }. Confirm? `,
-			default: true
-		}
-	];
 
-	return inquirer
-		.prompt( questions )
-		.then( ( answers ) => answers.confirm ? answers.type : null );
+	let isPrerelease = currentVersion.indexOf( '-' ) > -1;
+	let major = semver.major( currentVersion );
+	let minor = semver.minor( currentVersion );
+	let patch = semver.patch( currentVersion );
+
+	let choice = ( n, v ) => { return { name : n, value: v }; };
+	let semverFormat = ( name, type, identifier = '' ) => `${ name } ( ${ chalk.cyan.bold( semver.inc( currentVersion, type, identifier ) ) } )`;
+
+	if ( isPrerelease ) {
+
+		let prereleaseType = ( patch === 0 ? ( minor === 0 ? SEMVER_MAJOR : SEMVER_MINOR ) : SEMVER_PATCH );
+		let isAlpha = isPrerelease && currentVersion.indexOf( '-alpha.' ) > -1;
+		let isBeta = isPrerelease && currentVersion.indexOf( '-beta.' ) > -1;
+
+		let choices = [
+			choice( semverFormat( 'New prerelease', SEMVER_PRE_RELEASE ), [ SEMVER_PRE_RELEASE ] ),
+			choice( semverFormat( 'Complete prerelease', prereleaseType ), [ prereleaseType ] )
+		];
+
+		if ( !isAlpha && !isBeta )
+			choices.push( choice( semverFormat( 'Switch to alpha', SEMVER_PRE_RELEASE, 'alpha' ), [ SEMVER_PRE_RELEASE, 'alpha' ] ) );
+		if ( isAlpha )
+			choices.push( choice( semverFormat( 'Switch to beta', SEMVER_PRE_RELEASE, 'beta' ), [ SEMVER_PRE_RELEASE, 'beta' ] ) );
+
+		return inquirer.prompt( {
+			name: 'value',
+			type: 'list',
+			message: 'You are currently in a prerelease version. How do you want to proceed?',
+			choices: choices
+		} ).then( answers => answers.value );
+
+	} else {
+
+		let askReleaseType = () => {
+			let versionChoice = ( d, v ) => choice( semverFormat( d, v ), v );
+			let prerelease = 'Prerelease version...';
+			let choices = [
+				versionChoice( 'New patch version', SEMVER_PATCH ),
+				versionChoice( 'New minor version', SEMVER_MINOR ),
+				versionChoice( 'New major version', SEMVER_MAJOR ),
+				prerelease
+			];
+			return inquirer.prompt( {
+				name: 'value',
+				type: 'list',
+				message: 'Start a new release:',
+				choices: choices
+			} ).then( answers => answers.value === prerelease ? askPrereleaseType() : [ answers.value ] );
+		};
+
+		let askPrereleaseType = () => {
+			let preversionChoice = ( d, v ) => choice( semverFormat( d, v ), v );
+			let option_back = '< Back';
+			let choices = [
+				option_back,
+				preversionChoice( 'New pre-patch version', SEMVER_PRE_PATCH ),
+				preversionChoice( 'New pre-minor version', SEMVER_PRE_MINOR ),
+				preversionChoice( 'New pre-major version', SEMVER_PRE_MAJOR )
+			];
+			return inquirer.prompt( {
+				name: 'value',
+				type: 'list',
+				message: 'Start a new prerelease:',
+				choices: choices,
+				default: choices[ 1 ]
+			} ).then( answers => answers.value === option_back ? askReleaseType() : askPrereleaseIdentifier( answers.value ) );
+		};
+
+		let askPrereleaseIdentifier = ( prereleaseType ) => {
+			let identifierChoice = ( d, i ) => choice( semverFormat( d, prereleaseType, i ), i );
+			let option_back = '< Back';
+			let choices = [
+				option_back,
+				identifierChoice( 'Alpha', 'alpha' ),
+				identifierChoice( 'Beta', 'beta' )
+			];
+			return inquirer.prompt( {
+				name: 'value',
+				type: 'list',
+				message: 'Choose prerelease type:',
+				choices: choices,
+				default: choices[ 1 ]
+			} ).then( answers => answers.value === option_back ? askPrereleaseType() : [ prereleaseType, answers.value ] );
+		};
+
+		return askReleaseType();
+
+	}
+
 }
 
 async function askForChangelog( versionType, versionNumber ) {
@@ -469,11 +541,11 @@ async function activate() {
 
 	logger.line();
 
-	let VERSION_TYPE = await askVersionType( VERSION );
+	let [ VERSION_TYPE, PRERELEASE_IDENTIFIER ] = await askVersionType( VERSION );
 	if ( !VERSION_TYPE )
 		throw new ProcedureError( 'Operation aborted by the user.' );
 
-	let NEXT_VERSION = semver.inc( VERSION, VERSION_TYPE );
+	let NEXT_VERSION = semver.inc( VERSION, VERSION_TYPE, PRERELEASE_IDENTIFIER );
 
 	let CHANGELOG = await askForChangelog( VERSION_TYPE, NEXT_VERSION );
 
@@ -520,7 +592,7 @@ async function activate() {
 		await execute( `git checkout -b ${ RELEASE_BRANCH }` );
 	}
 
-	await execute( `npm version ${ VERSION_TYPE } --git-tag-version=false` );
+	await execute( `npm version ${ NEXT_VERSION } --git-tag-version=false` );
 	await execute( `git add package.json` );
 	await execute( `git commit -m "${ NEXT_VERSION }"` );
 	await execute( `git checkout master` );
