@@ -2,6 +2,12 @@
   "name": "@zelgadis87/npm-versionator",
   "version": "0.4.0",
   "description": "An opinionated CLI tool to help versioning your NPM package",
+  "keywords": [
+    "NPM",
+    "versioning",
+    "CLI",
+    "SemVer"
+  ],
   "bin": "index.js",
   "scripts": {
     "start": "node index.js",
