@@ -371,6 +371,17 @@ async function askForChangelog( versionType, versionNumber ) {
 
 }
 
+async function askForConfirmation( versionNumber ) {
+
+	return inquirer.prompt( {
+		name: 'confirm',
+		type: 'confirm',
+		message: `Are you sure you wish to update your package to version ${ chalk.cyan( versionNumber ) } ? ${ chalk.bold.yellow( 'This action cannot be easily undone.' ) }`,
+		default: false
+	} ).then( answers => answers.confirm );
+
+}
+
 function writeChangelogEntry( entry ) {
 
 	let content = '', newline = '\n';
@@ -542,12 +553,25 @@ async function activate() {
 	logger.line();
 
 	let [ VERSION_TYPE, PRERELEASE_IDENTIFIER ] = await askVersionType( VERSION );
-	if ( !VERSION_TYPE )
-		throw new ProcedureError( 'Operation aborted by the user.' );
 
 	let NEXT_VERSION = semver.inc( VERSION, VERSION_TYPE, PRERELEASE_IDENTIFIER );
 
 	let CHANGELOG = await askForChangelog( VERSION_TYPE, NEXT_VERSION );
+
+	//
+	// ----------------------------------------------------
+	// Confirm section
+	// ----------------------------------------------------
+	// We ask the user for confirmation.
+	// This is the last step before we proceed to modify
+	//   the repository.
+	//
+
+	logger.line();
+
+	let PROCEED = await askForConfirmation( NEXT_VERSION );
+	if ( !PROCEED )
+		throw new ProcedureError( 'Operation aborted by the user.' );
 
 	//
 	// From here we start modifying the Git repository.
