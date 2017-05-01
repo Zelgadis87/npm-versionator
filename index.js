@@ -322,7 +322,7 @@ async function askVersionType( currentVersion ) {
 				type: 'list',
 				message: 'Start a new prerelease:',
 				choices: choices,
-				default: choices[ 1 ]
+				default: 1
 			} ).then( answers => answers.value === option_back ? askReleaseType() : askPrereleaseIdentifier( answers.value ) );
 		};
 
@@ -339,7 +339,7 @@ async function askVersionType( currentVersion ) {
 				type: 'list',
 				message: 'Choose prerelease type:',
 				choices: choices,
-				default: choices[ 1 ]
+				default: 1
 			} ).then( answers => answers.value === option_back ? askPrereleaseType() : [ prereleaseType, answers.value ] );
 		};
 
