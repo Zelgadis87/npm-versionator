@@ -28,15 +28,14 @@ When creating a pre-release version, the work gets tagged directly on the *devel
 # How to use it?
 1. Install this package as dev-dependency of your package, using:
 ```npm install --save-dev @zelgadis87/npm-versionator```
-1. Create a script on your `package.json` using `npm-versionator`. Do **not** use `version` as the task name, as that would conflict with the standard NPM usage. You can use `version` (and the `preversion` and `postversion` hooks) to execute additional commands when creating a version, the same as a standard NPM package, and this tool will honor them. Example:
+2. Create a script on your `package.json` named `versionate` that simply starts `npm-versionator`. You can name the task however you want, but do **not** use `version` as the name, as that would conflict with the standard NPM usage. You can safely use `version` (and the `preversion` and `postversion` hooks) to execute additional commands when creating a version, the same as a standard NPM package. Example:
 ```
 ...
 "scripts": {
-  "versionator": "npm-versionator"
+  "versionate": "npm-versionator"
 }
 ...
 ```
-
-3. When ready for a (pre)release, use `npm run versionator` and follow the CLI instructions.
+3. When ready for a (pre)release, use `npm run versionate` and follow the CLI instructions.
 
 You can also install this tool as a global dependency, using `npm install -g @zelgadis87/npm-versionator`, and use it as `npm-versionator`, but that is not recommended.
