@@ -144,20 +144,20 @@ async function getAppVersion() {
 }
 
 async function validateGitRepository() {
-	let handleError = ( message ) => {
+	let handleError = ( message, command = null ) => {
 		return ( err ) => {
-			throw err.code === 128 ? new ProcedureError( message ) : err;
+			throw err.code === 128 ? new ProcedureError( message, command ) : err;
 		};
 	};
-	await execute( 'git status', false ).catch( handleError( 'Not a valid Git repository.' ) );
+	await execute( 'git status', false ).catch( handleError( 'Not a valid Git repository. To create a new repository, use:', 'git init' ) );
 	await execute( 'git rev-parse HEAD', false ).catch( handleError( 'Git repository seems to be empty, please commit some changes first.' ) );
-	await execute( 'git rev-parse master', false ).catch( handleError( 'Missing branch master, please create it on the first commit of the repository.' ) );
-	await execute( 'git rev-parse develop', false ).catch( handleError( 'Missing branch develop, please branch it off master and use that for development.' ) );
+	await execute( 'git rev-parse master', false ).catch( handleError( 'Missing branch master, please create it on the first commit of the repository:', 'git branch master <first_commit_id>' ) );
+	await execute( 'git rev-parse develop', false ).catch( handleError( 'Missing branch develop, please branch it off master and use that for development:', 'git checkout -b develop master' ) );
 }
 
 async function validateNpmPackage() {
 	if ( !fs.existsSync( 'package.json' ) )
-		throw new ProcedureError( `Folder doesn't seem to contain a valid NPM package.` );
+		throw new ProcedureError( `Folder doesn't seem to contain a valid NPM package. To create a new package, use:`, 'npm init' );
 }
 
 async function getLatestTag() {
