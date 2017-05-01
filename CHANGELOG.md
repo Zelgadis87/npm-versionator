@@ -1,4 +1,7 @@
 
+## v0.4.0-alpha.1 (2017/05/01 19:08)
+- Feature: Allow prereleases without any commits
+
 ## v0.4.0-alpha.0 (2017/05/01 14:59)
 - Add: Implemented prerelease versioning, supports: alpha, beta, RC 
 - Change: Changelog.md releases are now timestamped
