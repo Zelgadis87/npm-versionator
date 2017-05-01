@@ -259,7 +259,7 @@ async function npmTest() {
 async function askVersionType( currentVersion, diffFiles ) {
 
 	let isPrerelease = currentVersion.indexOf( '-' ) > -1;
-	let major = semver.major( currentVersion );
+	// let major = semver.major( currentVersion );
 	let minor = semver.minor( currentVersion );
 	let patch = semver.patch( currentVersion );
 
@@ -512,7 +512,7 @@ async function activate() {
 	let [ PRERELEASE_TYPE, PRERELEASE_NUMBER ] = match ? [ match[1], match[2] ] : [ null, null ];
 
 	if ( IS_PRERELEASE_VERSION )
-		log( `Prerelease mode:`, PRERELEASE_TYPE, 'info' );
+		log( `Prerelease information:`, `${ PRERELEASE_TYPE } ${ PRERELEASE_NUMBER + 1 }`, 'info' );
 
 	let UNTRACKED = await countUntrackedFiles();
 	log( `Untracked files detected:`, UNTRACKED, UNTRACKED > 0 ? 'warn' : 'info' );
