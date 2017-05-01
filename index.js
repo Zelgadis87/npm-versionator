@@ -577,7 +577,11 @@ async function activate() {
 	// git log master..develop --oneline
 
 	if ( !fs.existsSync( 'CHANGELOG.md' ) )
-		logger.warn( 'Changelog file missing, it is suggested to create it.' );
+		logger.warn( 'CHANGELOG.md file missing, it is suggested to create it before a public release.' );
+	if ( !fs.existsSync( 'README.md' ) )
+		logger.warn( 'README.md file missing, it is suggested to create it before a public release.' );
+	if ( !fs.existsSync( 'LICENSE' ) )
+		logger.warn( 'LICENSE file missing, it is suggested to create it before a public release.' );
 
 	//
 	// ----------------------------------------------------
