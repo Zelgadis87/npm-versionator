@@ -661,8 +661,6 @@ async function activate() {
 		logger.info( `To publish your changes to the npm repository, use:`, 'npm publish --tag=latest' );
 	}
 
-	logger.info( `To publish your changes to the npm repository, use:`, 'npm publish' );
-
 	return true;
 
 }
