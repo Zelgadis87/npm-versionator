@@ -292,10 +292,10 @@ async function askVersionType( currentVersion, diffFiles ) {
 			if ( !isBeta && !isRC )
 				choices.push( choice( semverFormat( 'Switch to Beta', SEMVER_PRE_RELEASE, 'beta' ), [ SEMVER_PRE_RELEASE, 'beta' ] ) );
 
-			if ( !isRC )
+			if ( !isRC ) {
 				choices.push( choice( semverFormat( 'Switch to Release Candidate', SEMVER_PRE_RELEASE, 'rc' ), [ SEMVER_PRE_RELEASE, 'rc' ] ) );
-
-			choices.push( choice( semverFormat( 'Complete prerelease', prereleaseType ), [ prereleaseType ] ) );
+				choices.push( choice( semverFormat( `Complete prerelease ${ chalk.yellow( '(should use RC)' ) }`, prereleaseType ), [ prereleaseType ] ) );
+			}
 
 		}
 
