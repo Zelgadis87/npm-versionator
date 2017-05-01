@@ -559,6 +559,8 @@ async function activate() {
 
 	let NEXT_VERSION = semver.inc( VERSION, VERSION_TYPE, PRERELEASE_IDENTIFIER );
 
+	let IS_UNSTABLE = _.includes( [ SEMVER_PRE_PATCH, SEMVER_PRE_MINOR, SEMVER_PRE_MAJOR, SEMVER_PRE_RELEASE ], VERSION_TYPE );
+
 	let CHANGELOG = await askForChangelog( VERSION_TYPE, NEXT_VERSION );
 
 	if ( CHANGELOG )
@@ -622,11 +624,19 @@ async function activate() {
 	await execute( `npm version ${ NEXT_VERSION } --git-tag-version=false` );
 	await execute( `git add package.json` );
 	await execute( `git commit -m "${ NEXT_VERSION }"` );
-	await execute( `git checkout master` );
-	await execute( `git merge --no-ff ${ RELEASE_BRANCH }` );
-	await execute( `git tag ${ RELEASE_TAG }` );
+
+	if ( !IS_UNSTABLE ) {
+		await execute( `git checkout master` );
+		await execute( `git merge --no-ff ${ RELEASE_BRANCH }` );
+		await execute( `git tag ${ RELEASE_TAG }` );
+	}
+
 	await execute( `git checkout develop` );
 	await execute( `git merge --no-ff ${ RELEASE_BRANCH }` );
+
+	if ( IS_UNSTABLE )
+		await execute( `git tag ${ RELEASE_TAG }` );
+
 	await execute( `git branch -d ${ RELEASE_BRANCH }` );
 
 	//
@@ -655,7 +665,7 @@ async function activate() {
 		logger.info( `To synchronize your changes to the ${ rep } Git repository, use:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
 	}
 
-	if ( _.includes( [ SEMVER_PRE_PATCH, SEMVER_PRE_MINOR, SEMVER_PRE_MAJOR, SEMVER_PRE_RELEASE ], VERSION_TYPE ) ) {
+	if ( IS_UNSTABLE ) {
 		logger.info( `To publish your unstable changes to the npm repository, use:`, 'npm publish --tag=unstable' );
 	} else {
 		logger.info( `To publish your changes to the npm repository, use:`, 'npm publish --tag=latest' );
