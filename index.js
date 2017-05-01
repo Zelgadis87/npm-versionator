@@ -193,12 +193,12 @@ async function countUntrackedFiles() {
 	return execute( 'git ls-files --exclude-standard --others', false ).then( countLines );
 }
 
-async function countDiffCommits() {
-	return execute( `git rev-list --count --right-only master...develop`, false ).then( parseInt );
+async function countDiffCommits( from ) {
+	return execute( `git rev-list --count --right-only ${ from }...HEAD`, false ).then( parseInt );
 }
 
-async function countDiffFiles() {
-	return execute( 'git diff --name-only master..develop', false ).then( countLines );
+async function countDiffFiles( from ) {
+	return execute( `git diff --name-only ${ from }...HEAD`, false ).then( countLines );
 }
 
 function countLines( contents ) {
@@ -474,16 +474,16 @@ async function activate() {
 		// There are some files yet to be commited => throw exception
 		throw new ProcedureError( 'Repository not clean, please commit all your files before proceeding:', 'git commit -a' );
 
-	let VERSION = await getLatestTag(), tagFound = false;
-	if ( VERSION ) {
-		log( `Latest tag found:`, VERSION );
+	let LAST_TAG = await getLatestTag(), tagFound = false;
+	if ( LAST_TAG ) {
+		log( `Latest tag found:`, LAST_TAG );
 		tagFound = true;
 	} else {
-		VERSION = '0.0.0';
+		LAST_TAG = '0.0.0';
 		log( `Latest tag found:`, '---', 'warn' );
 	}
 
-	if ( tagFound && !semver.valid( VERSION ) )
+	if ( tagFound && !semver.valid( LAST_TAG ) )
 		throw new ProcedureError( 'Invalid tag found according to SEMVER. Please tag your releases using semver.' );
 
 	let PACKAGE_VERSION = await getPackageVersion();
@@ -492,28 +492,29 @@ async function activate() {
 	if ( !semver.valid( PACKAGE_VERSION ) )
 		throw new ProcedureError( 'Invalid package version according to SEMVER. Please package your releases using semver.' );
 
+	let VERSION;
 	if ( !tagFound ) {
 		VERSION = PACKAGE_VERSION;
 	} else {
-		let sv = semver( VERSION ), sp = semver( PACKAGE_VERSION );
+		let sv = semver( LAST_TAG ), sp = semver( PACKAGE_VERSION );
 		if ( sv.major !== sp.major || sv.minor !== sp.minor || sv.patch !== sp.patch )
 			throw new ProcedureError( `Version mismatched, please tag version ${ PACKAGE_VERSION } on your Git repository:`, `git tag ${ PACKAGE_VERSION } <commit_id>` );
-		VERSION = PACKAGE_VERSION;
+		VERSION = LAST_TAG;
 	}
 
-	let IS_RELEASE_CANDIDATE = /-rc\.[0-9]+$/.test( VERSION );
+	let IS_RELEASE_CANDIDATE = /-rc\.[0-9]+$/.test( LAST_TAG );
 
 	let UNTRACKED = await countUntrackedFiles();
 	log( `Untracked files detected:`, UNTRACKED, UNTRACKED > 0 ? 'warn' : 'info' );
 
-	let DIFF_COMMITS = await countDiffCommits();
+	let DIFF_COMMITS = await countDiffCommits( tagFound ? LAST_TAG : 'master' );
 	log( `Commits since last release:`, DIFF_COMMITS, DIFF_COMMITS === 0 ? 'warn' : 'info' );
 
 	if ( DIFF_COMMITS === 0 && !IS_RELEASE_CANDIDATE )
 		// There are no commits between master and develop -> throw exception
 		throw new ProcedureError( 'No commits detected since last version.' );
 
-	let DIFF_FILES = await countDiffFiles();
+	let DIFF_FILES = await countDiffFiles( tagFound ? LAST_TAG : 'master' );
 	log( `Files changed since last release:`, DIFF_FILES, DIFF_FILES === 0 && !IS_RELEASE_CANDIDATE ? 'warn' : 'info' );
 
 	if ( DIFF_FILES === 0 && !IS_RELEASE_CANDIDATE )
