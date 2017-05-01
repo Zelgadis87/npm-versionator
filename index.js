@@ -363,7 +363,7 @@ async function askForChangelog( versionType, versionNumber ) {
 			type: 'editor',
 			message: 'Please write the contents of the update',
 			when: ( answers ) => versionType === SEMVER_MAJOR || answers.change,
-			default: `## v${ versionNumber } (${ moment().format( 'YYYY/MM/DD' ) })\n- Entry 1\n- Entry 2`
+			default: `## v${ versionNumber } (${ moment().format( 'YYYY/MM/DD HH:mm' ) })\n- Entry 1\n- Entry 2`
 		}
 	];
 
