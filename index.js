@@ -632,13 +632,15 @@ async function activate() {
 
 		logger.info( 'Changelog updated.' );
 		logger.line();
+	}
 
+	if ( !IS_UNSTABLE )
 		await execute( `git checkout -b ${ RELEASE_BRANCH }` );
+
+	if ( CHANGELOG ) {
 		await execute( `git add CHANGELOG.md` );
 		await execute( `git commit -m "Updated changelog for v${ NEXT_VERSION }"` );
 		await execute( `rm CHANGELOG.md.draft` );
-	} else {
-		await execute( `git checkout -b ${ RELEASE_BRANCH }` );
 	}
 
 	await execute( `npm version ${ NEXT_VERSION } --git-tag-version=false` );
@@ -649,15 +651,14 @@ async function activate() {
 		await execute( `git checkout master` );
 		await execute( `git merge --no-ff ${ RELEASE_BRANCH }` );
 		await execute( `git tag ${ RELEASE_TAG }` );
-	}
 
-	await execute( `git checkout develop` );
-	await execute( `git merge --no-ff ${ RELEASE_BRANCH }` );
+		await execute( `git checkout develop` );
+		await execute( `git merge --no-ff ${ RELEASE_BRANCH }` );
 
-	if ( IS_UNSTABLE )
+		await execute( `git branch -d ${ RELEASE_BRANCH }` );
+	} else {
 		await execute( `git tag ${ RELEASE_TAG }` );
-
-	await execute( `git branch -d ${ RELEASE_BRANCH }` );
+	}
 
 	//
 	// ----------------------------------------------------
