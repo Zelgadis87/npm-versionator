@@ -1,6 +1,6 @@
 
 # What is it?
-This library is an opinionated tool for helping developers manage the versioning process of an NPM package.
+An opinionated tool for helping developers manage the versioning process of an NPM package.
 
 # How does it work?
 This package exposes a simple Command Line Interface (CLI) for guiding the user during the process of creation a new version of an NPM package.
@@ -23,13 +23,13 @@ This tool is opinionated and will try to follow some useful best practices.
 In particular:
 
 - It will enforce that a new version of a package has to start from the *develop* branch and with a clean repository.
-- It will check that all configured NPM tests are passed.
+- It will check that all configured NPM tests are passing.
 - A request for an entry to the CHANGELOG.md file is asked on every version and is timestamped automatically.
 - Once a version is created, by specification, it cannot (or at least, not easily) be undone.
 - The preferred way to create a new public stable version of the package is to go from alpha releases, to beta releases, to release candidates. This is not forced but it is encouraged thorough the tool.
 - Version numbers cannot be decreased, and it is not possible to go back to an alpha prerelease from a beta prerelease, or to a beta release from a release candidate.
 - If the developer decides to use release candidates, no commit can be done between the latest RC and the final version, to ensure that no last minute bug is introduced in the system.
-- A warning will be emitted for untracked files.
+- A warning will be emitted if it detectes untracked files in the repository.
 - A warning will be emitted in case the LICENSE, README.md, CHANGELOG.md and/or .gitignore files are missing from the project.
 
 # What does it do?
@@ -49,14 +49,14 @@ Example of a minimal `package.json` using `npm-versionator`:
 ```
 {
   "name": "test-npm-package",
-  "version": "1.3.0",
+  "version": "0.3.0",
   "scripts": {
     "test": "eslint -c .eslintrc *.js",
     "versionate": "npm-versionator"
   },
   "devDependencies": {
-    "eslint": "^3.19.0",
-    "@zelgadis87/npm-versionator": "^0.4.3"
+    "eslint": "latest",
+    "@zelgadis87/npm-versionator": "latest"
   }
 }
 ```
