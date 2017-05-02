@@ -317,10 +317,10 @@ async function askVersionType( currentVersion, diffFiles ) {
 			let versionChoice = ( d, v ) => choice( semverFormat( d, v ), v );
 			let prerelease = 'Prerelease version...';
 			let choices = [
+				prerelease,
 				versionChoice( 'New patch version', SEMVER_PATCH ),
 				versionChoice( 'New minor version', SEMVER_MINOR ),
-				versionChoice( 'New major version', SEMVER_MAJOR ),
-				prerelease
+				versionChoice( 'New major version', SEMVER_MAJOR )
 			];
 			return inquirer.prompt( {
 				name: 'value',
