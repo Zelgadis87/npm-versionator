@@ -8,7 +8,9 @@
     "CLI",
     "SemVer"
   ],
-  "bin": "index.js",
+  "bin": {
+    "npm-versionator": "index.js"
+  },
   "scripts": {
     "start": "node index.js",
     "test": "npm run eslint",
