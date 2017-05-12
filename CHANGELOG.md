@@ -1,4 +1,7 @@
 
+## v0.5.0 (2017/05/12 21:04)
+- Massive code refactoring
+
 ## v0.4.0-alpha.3 (2017/05/01 21:01)
 - Feature: Added LICENSE file to the project
 
