@@ -3,13 +3,18 @@
 const Bluebird = extendBluebird( require( 'bluebird' ) )
 	, _ = require( 'lodash' )
 	, semver = require( 'semver' )
-	, child_process = require( 'child_process' )
 	, process = require( 'process' )
 	, inquirer = extendInquirer( require( 'inquirer' ) )
 	, fs = Bluebird.promisifyAll( require( 'fs' ) )
 	, moment = require( 'moment' )
 	, chalk = require( 'chalk' )
 	, yargs = require( 'yargs' ).argv
+
+	, logger = require( './lib/logger.js' )
+	, npm = require( './lib/npm.js' )
+	, git = require( './lib/git.js' )
+	, execute = require( './lib/execute.js' )
+	, ProcedureError = require( './lib/utils.js' ).ProcedureError
 	;
 
 const SEMVER_PATCH = 'patch'
@@ -52,208 +57,11 @@ function extendBluebird( Bluebird ) {
 	return Bluebird;
 }
 
-let logger = ( function() {
-
-	let me = this;
-
-	// Interface
-	me.info = info;
-	me.error = error;
-	me.warn = warn;
-	me.line = line;
-	me.command = command;
-	me.title = title;
-	me.out = out;
-
-	// Implementation
-
-	let isNewLine = false;
-
-	function out( m ) {
-		process.stdout.write( m );
-	}
-
-	function err( m ) {
-		process.stderr.write( m );
-	}
-
-	function line( forced ) {
-		if ( isNewLine && !forced )
-			return;
-		out( '\n' );
-		isNewLine = true;
-	}
-
-	let prepend = ( a ) => ( b ) => a + b;
-	let append = ( b ) => ( a ) => a + b;
-
-	let prefix = ( x ) => prepend( x + ' ' );
-	let newline = ( x ) => { isNewLine = false; return x + '\n'; };
-
-	let combine = ( x, ...fns ) => ( x === null || x === undefined ) ? '' : _.flow( fns )( x );
-
-	function info( m, c ) {
-		out( combine( m, prefix( ' ' ), append( combine( c, prepend( ' ' ), chalk.cyan ) ), chalk.green, newline ) );
-	}
-
-	function warn( m, c ) {
-		out( combine( m, prefix( ' ' ), append( combine( c, prepend( ' ' ), chalk.cyan ) ), chalk.yellow, newline ) );
-	}
-
-	function error( m, c ) {
-		err( combine( m, prefix( ' ' ), append( combine( c, prepend( ' ' ), chalk.cyan ) ), chalk.red, chalk.bold, newline ) );
-	}
-
-	function command( m ) {
-		out( combine( m, prefix( '>' ), chalk.cyan, newline ) );
-	}
-
-	function title( m ) {
-		let hr = _.repeat( '-', m.length );
-		info( hr );
-		info( m );
-		info( hr );
-	}
-
-	return me;
-
-} )();
-
-class ProcedureError extends Error {
-
-	constructor( message, command ) {
-		super( message );
-		this.command = command;
-	}
-
-}
-
-async function execute( cmd, showInConsole ) {
-	return new Bluebird( ( resolve, reject ) => {
-		if ( showInConsole !== false )
-			logger.command( cmd );
-		child_process.exec( cmd, ( err, stdout, stderr ) => {
-			if ( err ) reject( err );
-			else resolve( stdout.trim() );
-		} );
-	} );
-}
-
-async function getAppVersion() {
-	return require( './package' ).version;
-}
-
-async function validateGitRepository() {
-	let handleError = ( message, command = null ) => {
-		return ( err ) => {
-			throw err.code === 128 ? new ProcedureError( message, command ) : err;
-		};
-	};
-	await execute( 'git status', false ).catch( handleError( 'Not a valid Git repository. To create a new repository, use:', 'git init' ) );
-	await execute( 'git rev-parse HEAD', false ).catch( handleError( 'Git repository seems to be empty, please commit some changes first.' ) );
-	await execute( 'git rev-parse master', false ).catch( handleError( 'Missing branch master, please create it on the first commit of the repository:', 'git branch master <first_commit_id>' ) );
-	await execute( 'git rev-parse develop', false ).catch( handleError( 'Missing branch develop, please branch it off master and use that for development:', 'git checkout -b develop master' ) );
-}
-
-async function validateNpmPackage() {
-	if ( !fs.existsSync( 'package.json' ) )
-		throw new ProcedureError( `Folder doesn't seem to contain a valid NPM package. To create a new package, use:`, 'npm init' );
-}
-
-async function getLatestTag() {
-	let latestVersion = null;
-	let sha = await execute( 'git rev-list --tags=v*.*.* --max-count=1', false ).catch( ( err ) => {
-		if ( err.code === 129 ) {
-			// No tags found, return empty version.
-			return null;
-		}
-		throw err;
-	} );
-	if ( sha ) {
-		latestVersion = await execute( `git describe --tags ${ sha } --match=v*.*.*`, false );
-	}
-	return latestVersion;
-}
-
-async function getPackageVersion() {
-	let packageContent = await fs.readFileAsync( 'package.json' );
-	return JSON.parse( packageContent ).version;
-}
-
-async function getCurrentBranch() {
-	return execute( 'git rev-parse --abbrev-ref HEAD', false )
-		.then( ( name ) => {
-			if ( name !== 'HEAD' )
-				return name;
-			return '*detached HEAD';
-		} );
-}
-
-async function countUntrackedFiles() {
-	return execute( 'git ls-files --exclude-standard --others', false ).then( countLines );
-}
-
-async function countDiffCommits( from ) {
-	return execute( `git rev-list --count --right-only ${ from }...HEAD`, false ).then( parseInt );
-}
-
-async function countDiffFiles( from ) {
-	return execute( `git diff --name-only ${ from }...HEAD`, false ).then( countLines );
-}
-
-function countLines( contents ) {
-	let count = -1;
-	if ( contents.length > 0 )
-		for ( let index = 0; index != -1; count++, index = contents.indexOf( '\n', index + 1 ) );
-	return count + 1;
-}
-
-async function isRepositoryClean() {
-	// Removed, as this would return the wrong value in some cases: http://stackoverflow.com/a/2659808/90006
-	// return execute( 'git diff-index --quiet HEAD --', false ).then( () => true, () => false );
-	return Bluebird.all( [
-		execute( 'git diff-index --quiet --cached HEAD', false ).then( () => true, () => false ),
-		execute( 'git diff-files --quiet', false ).then( () => true, () => false )
-	] ).spread( ( diffIndex, diffFiles ) => diffIndex && diffFiles );
-}
-
-async function getRemoteRepositories() {
-	return execute( 'git remote', false ).then( output => output.length > 0 ? output.split( '\n' ) : [] );
-}
-
-async function npmTest() {
-
-	let log = ( error, x, lineEnding = false ) => {
-		if ( x === null || x === undefined )
-			return;
-		let lines = x.split( '\n' ),
-			style = chalk.bold,
-			newline = false;
-		for ( let line of lines ) {
-			if ( newline ) {
-				logger.line( true );
-				logLine();
-			}
-			logger.out( style( line ) );
-			newline = true;
-		}
-	};
-	let logLine = () => logger.out( chalk.cyan( '    ' ) );
-
-	return new Bluebird( ( resolve, reject ) => {
-
-		logger.info( 'Testing NPM package: ', 'npm test -- --color'  );
-		logLine();
-
-		let test = child_process.spawn( /^win/.test( process.platform ) ? 'npm.cmd' : 'npm', [ 'test', '--', '--color' ] );
-		test.stdout.on( 'data', data => log( false, data.toString() ) );
-		test.stderr.on( 'data', data => log( true, data.toString() ) );
-		test.on( 'close', ( code ) => {
-			logger.line( true );
-			code === 0 ? resolve() : reject();
-		} );
-
-	} );
+function announceAndExecuteAsync( cmd ) {
+	return Bluebird
+		.resolve( cmd )
+		.tap( logger.command )
+		.then( execute );
 }
 
 async function askVersionType( currentVersion, diffFiles ) {
@@ -440,7 +248,7 @@ async function activate() {
 
 	logger.line();
 
-	let APP_VERSION = await getAppVersion();
+	let APP_VERSION = await npm.getVersion();
 	logger.title( _.pad( `Welcome to Version Generator v${ APP_VERSION }`, LINE_LENGHT ) );
 
 	//
@@ -453,9 +261,8 @@ async function activate() {
 
 	logger.line();
 
-	await validateGitRepository();
-
-	await validateNpmPackage();
+	await git.validate();
+	await npm.validate();
 
 	//
 	// ----------------------------------------------------
@@ -467,19 +274,19 @@ async function activate() {
 
 	logger.line();
 
-	let BRANCH = await getCurrentBranch();
+	let BRANCH = await git.getCurrentBranch();
 	log( `You currently are on branch:`, BRANCH );
 
 	if ( BRANCH !== 'develop' )
 		// We are on an invalid branch => throw exception
 		throw new ProcedureError( 'Please move to the DEVELOP branch first:', 'git checkout develop' );
 
-	let EVERYTHING_COMMITED = await isRepositoryClean();
+	let EVERYTHING_COMMITED = await git.isRepositoryClean();
 	if ( !EVERYTHING_COMMITED )
 		// There are some files yet to be commited => throw exception
 		throw new ProcedureError( 'Repository not clean, please commit all your files before proceeding:', 'git commit -a' );
 
-	let LAST_TAG = await getLatestTag(), tagFound = false;
+	let LAST_TAG = await git.getLatestVersionTag(), tagFound = false;
 	if ( LAST_TAG ) {
 		log( `Latest tag found:`, LAST_TAG );
 		tagFound = true;
@@ -491,7 +298,7 @@ async function activate() {
 	if ( tagFound && !semver.valid( LAST_TAG ) )
 		throw new ProcedureError( 'Invalid tag found according to SEMVER. Please tag your releases using semver.' );
 
-	let PACKAGE_VERSION = await getPackageVersion();
+	let PACKAGE_VERSION = await npm.getVersion();
 	log( `Package version:`, PACKAGE_VERSION );
 
 	if ( !semver.valid( PACKAGE_VERSION ) )
@@ -514,13 +321,13 @@ async function activate() {
 	if ( IS_PRERELEASE_VERSION )
 		log( `Prerelease information:`, `${ PRERELEASE_TYPE } ${ parseInt( PRERELEASE_NUMBER ) }`, 'info' );
 
-	let UNTRACKED = await countUntrackedFiles();
+	let UNTRACKED = await git.countUntrackedFiles();
 	log( `Untracked files detected:`, UNTRACKED, UNTRACKED > 0 ? 'warn' : 'info' );
 
-	let DIFF_COMMITS = await countDiffCommits( tagFound ? LAST_TAG : 'master' );
+	let DIFF_COMMITS = await git.countDiffCommits( tagFound ? LAST_TAG : 'master' );
 	log( `Commits since ${ VERSION }:`, DIFF_COMMITS, DIFF_COMMITS === 0 && !IS_PRERELEASE_VERSION ? 'warn' : 'info' );
 
-	let DIFF_MASTER_COMMITS = await countDiffCommits( 'master' );
+	let DIFF_MASTER_COMMITS = await git.countDiffCommits( 'master' );
 	if ( DIFF_MASTER_COMMITS !== DIFF_COMMITS )
 		log( `Commits since last stable release:`, DIFF_MASTER_COMMITS, DIFF_MASTER_COMMITS === 0 && !IS_PRERELEASE_VERSION ? 'warn' : 'info' );
 
@@ -528,10 +335,10 @@ async function activate() {
 		// There are no commits between master and develop -> throw exception
 		throw new ProcedureError( 'No commits detected since last version.' );
 
-	let DIFF_FILES = await countDiffFiles( tagFound ? LAST_TAG : 'master' );
+	let DIFF_FILES = await git.countDiffFiles( tagFound ? LAST_TAG : 'master' );
 	log( `Files changed since ${ VERSION }:`, DIFF_FILES, DIFF_FILES === 0 && !IS_PRERELEASE_VERSION ? 'warn' : 'info' );
 
-	let DIFF_MASTER_FILES = await countDiffFiles( 'master' );
+	let DIFF_MASTER_FILES = await git.countDiffFiles( 'master' );
 	if ( DIFF_MASTER_FILES !== DIFF_FILES )
 		log( `Files changed since last stable release:`, DIFF_MASTER_COMMITS, DIFF_MASTER_COMMITS === 0 && !IS_PRERELEASE_VERSION ? 'warn' : 'info' );
 
@@ -549,11 +356,8 @@ async function activate() {
 
 	logger.line();
 
-	await npmTest().then( () => {
-		logger.info( 'All tests passed.' );
-	}, err => {
-		throw new ProcedureError( 'Tests failed.' );
-	} );
+	await npm.test().catch( () => { throw new ProcedureError( 'Tests failed.' ); } );
+	logger.info( 'All tests passed.' );
 
 	//
 	// ----------------------------------------------------
@@ -567,7 +371,7 @@ async function activate() {
 
 	logger.line();
 
-	let REMOTE_REPOSITORIES = await getRemoteRepositories();
+	let REMOTE_REPOSITORIES = await git.getRemoteRepositories();
 	if ( REMOTE_REPOSITORIES.length === 0 ) {
 		logger.warn( 'No remote repository found.' );
 		logger.warn( '  Add one with:', 'git remote add <name> <url>' );
@@ -657,29 +461,29 @@ async function activate() {
 	}
 
 	if ( !IS_UNSTABLE )
-		await execute( `git checkout -b ${ RELEASE_BRANCH }` );
+		await announceAndExecuteAsync( `git checkout -b ${ RELEASE_BRANCH }` );
 
 	if ( CHANGELOG ) {
-		await execute( `git add CHANGELOG.md` );
-		await execute( `git commit -m "Updated changelog for v${ NEXT_VERSION }"` );
-		await execute( `rm CHANGELOG.md.draft` );
+		await announceAndExecuteAsync( `git add CHANGELOG.md` );
+		await announceAndExecuteAsync( `git commit -m "Updated changelog for v${ NEXT_VERSION }"` );
+		await announceAndExecuteAsync( `rm CHANGELOG.md.draft` );
 	}
 
-	await execute( `npm version ${ NEXT_VERSION } --git-tag-version=false` );
-	await execute( `git add package.json` );
-	await execute( `git commit -m "${ NEXT_VERSION }"` );
+	await announceAndExecuteAsync( `npm version ${ NEXT_VERSION } --git-tag-version=false` );
+	await announceAndExecuteAsync( `git add package.json` );
+	await announceAndExecuteAsync( `git commit -m "${ NEXT_VERSION }"` );
 
 	if ( !IS_UNSTABLE ) {
-		await execute( `git checkout master` );
-		await execute( `git merge --no-ff ${ RELEASE_BRANCH }` );
-		await execute( `git tag ${ RELEASE_TAG }` );
+		await announceAndExecuteAsync( `git checkout master` );
+		await announceAndExecuteAsync( `git merge --no-ff ${ RELEASE_BRANCH }` );
+		await announceAndExecuteAsync( `git tag ${ RELEASE_TAG }` );
 
-		await execute( `git checkout develop` );
-		await execute( `git merge --no-ff ${ RELEASE_BRANCH }` );
+		await announceAndExecuteAsync( `git checkout develop` );
+		await announceAndExecuteAsync( `git merge --no-ff ${ RELEASE_BRANCH }` );
 
-		await execute( `git branch -d ${ RELEASE_BRANCH }` );
+		await announceAndExecuteAsync( `git branch -d ${ RELEASE_BRANCH }` );
 	} else {
-		await execute( `git tag ${ RELEASE_TAG }` );
+		await announceAndExecuteAsync( `git tag ${ RELEASE_TAG }` );
 	}
 
 	//
