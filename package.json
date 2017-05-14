@@ -14,7 +14,7 @@
   "scripts": {
     "start": "node index.js",
     "test": "npm run eslint",
-    "eslint": "eslint -c .eslintrc *.js"
+    "eslint": "eslint -c .eslintrc **/*.js"
   },
   "author": "Zelgadis87",
   "license": "ISC",
