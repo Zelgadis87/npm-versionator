@@ -4,9 +4,9 @@ const Bluebird = require( 'bluebird' )
 	, process = require( 'process' )
 	, yargs = require( 'yargs' ).argv
 
-	, logger = require( './lib/logger.js' )
-	, ProcedureError = require( './lib/utils.js' ).ProcedureError
-	, main = require( './lib/main.js' )
+	, logger = require( './src/logger.js' )
+	, ProcedureError = require( './src/utils.js' ).ProcedureError
+	, main = require( './src/main.js' )
 	;
 
 function activate() {

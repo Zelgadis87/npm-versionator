@@ -29,23 +29,23 @@ describe( 'console', function() {
 	let console, testStream;
 	beforeEach( function() {
 		testStream = new TestStream();
-		console = require( '../lib/console.js' ).create( 10, testStream.stream );
+		console = require( './console.js' ).create( 10, testStream.stream );
 	} );
 
 	describe( 'Constructor', function() {
 
 		it( 'Should return the same object every time', function() {
-			expect( require( '../lib/console.js' ) ).to.be.equal( require( '../lib/console.js' ) );
+			expect( require( './console.js' ) ).to.be.equal( require( './console.js' ) );
 		} );
 
 		it( 'Should allow the default console to be overridden', function() {
-			expect( require( '../lib/console.js' ).create() ).to.not.be.equal( require( '../lib/console.js' ) );
+			expect( require( './console.js' ).create() ).to.not.be.equal( require( './console.js' ) );
 		} );
 
 		it( 'Should use the given stream to output', function() {
 			let counter = 0;
 			let testStream = new stream.Writable( { write: () => counter++ } );
-			require( '../lib/console.js' ).create( Number.MAX_SAFE_INTEGER, testStream ).print( '123' );
+			require( './console.js' ).create( Number.MAX_SAFE_INTEGER, testStream ).print( '123' );
 			expect( counter ).to.be.equal( 1 );
 		} );
 
