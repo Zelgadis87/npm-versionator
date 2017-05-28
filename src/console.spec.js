@@ -137,4 +137,39 @@ describe( 'console', function() {
 
 	} );
 
+	describe( 'Blank lines', function() {
+
+		it( 'Should print a new line when requested', function() {
+			console.print( 'a' );
+			console.print( 'b' );
+			console.line();
+			console.print( 'c' );
+			console.print( 'd' );
+			console.line();
+			console.print( 'e' );
+			expect( testStream.output ).to.be.equal( '  ab\n  cd\n  e' );
+		} );
+
+		it( 'Should not print two consecutive blank lines', function() {
+			console.print( 'a' );
+			console.line();
+			console.line();
+			console.println( 'b' );
+			console.line();
+			console.print( 'c' );
+			expect( testStream.output ).to.be.equal( '  a\n  b\n  c' );
+		} );
+
+		it( 'Should print two consecutive blank lines when forced to do so', function() {
+			console.print( 'a' );
+			console.line();
+			console.line( true );
+			console.println( 'b' );
+			console.line( true );
+			console.print( 'c' );
+			expect( testStream.output ).to.be.equal( '  a\n\n  b\n\n  c' );
+		} );
+
+	} );
+
 } );

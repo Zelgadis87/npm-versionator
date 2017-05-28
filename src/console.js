@@ -40,7 +40,7 @@ function Console( lineLength = LINE_LENGTH, outputStream = process.stdout ) {
 		return out( msg + '\n', styleFn );
 	}
 
-	function out( msg, styleFn = _.identity ) {
+	function out( msg, styleFn ) {
 		if ( !_.isString( msg ) )
 			throw new Error( 'msg is a required parameter' );
 		if ( msg.indexOf( '\n' ) > -1 ) {
