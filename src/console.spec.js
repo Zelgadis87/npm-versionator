@@ -2,7 +2,6 @@
 /* eslint-env mocha */
 
 const chai = require( 'chai' )
-	, _ = require( 'lodash' )
 	, stream = require( 'stream' )
 	, chalk = require( 'chalk' )
 	, expect = chai.expect
@@ -122,12 +121,12 @@ describe( 'console', function() {
 
 		it( 'Should automatically split long lines without breaking words, when possibile', function() {
 			console.print( 'ab ab ab ab ab ab ab ab ab ab' );
-			expect( testStream.output ).to.be.equal( '  ab ab ab\n  ab ab ab\n  ab ab ab\n  ab' );
+			expect( testStream.output ).to.be.equal( '  ab ab ab\n    ab ab ab\n    ab ab ab\n    ab' );
 		} );
 
 		it( 'Should automatically split long lines by breaking words, if no spaces are available', function() {
 			console.print( 'abcdefghilmnopqrstuvz' );
-			expect( testStream.output ).to.be.equal( '  abcdefghil\n  mnopqrstuv\n  z' );
+			expect( testStream.output ).to.be.equal( '  abcdefghil\n    mnopqrst\n    uvz' );
 		} );
 
 		it( 'Should stylize text', function() {
@@ -150,24 +149,36 @@ describe( 'console', function() {
 			expect( testStream.output ).to.be.equal( '  ab\n  cd\n  e' );
 		} );
 
-		it( 'Should not print two consecutive blank lines', function() {
+		it( 'Should not print more than two consecutive blank lines', function() {
 			console.print( 'a' );
+			console.line();
+			console.line();
+			console.line();
 			console.line();
 			console.line();
 			console.println( 'b' );
 			console.line();
-			console.print( 'c' );
-			expect( testStream.output ).to.be.equal( '  a\n  b\n  c' );
+			console.line();
+			console.print( 'c\n' );
+			console.line();
+			console.line();
+			console.print( 'd\n\n\n\n\n\ne\n\nf' );
+			expect( testStream.output ).to.be.equal( '  a\n\n  b\n\n  c\n\n  d\n\n  e\n\n  f' );
 		} );
 
 		it( 'Should print two consecutive blank lines when forced to do so', function() {
 			console.print( 'a' );
 			console.line();
+			console.line();
 			console.line( true );
 			console.println( 'b' );
+			console.line();
 			console.line( true );
-			console.print( 'c' );
-			expect( testStream.output ).to.be.equal( '  a\n\n  b\n\n  c' );
+			console.print( 'c\n' );
+			console.line();
+			console.line( true );
+			console.print( 'd' );
+			expect( testStream.output ).to.be.equal( '  a\n\n\n  b\n\n\n  c\n\n\n  d' );
 		} );
 
 	} );

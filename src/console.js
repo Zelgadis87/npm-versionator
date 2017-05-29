@@ -1,9 +1,8 @@
 
-const chalk = require( 'chalk' )
-	, process = require( 'process' )
+const process = require( 'process' )
 	, _ = require( 'lodash' );
 
-const LINE_LENGTH = 45, _console = require( 'console' );
+const LINE_LENGTH = 45;
 
 function Console( lineLength = LINE_LENGTH, outputStream = process.stdout ) {
 
@@ -15,53 +14,70 @@ function Console( lineLength = LINE_LENGTH, outputStream = process.stdout ) {
 	me.line = line;
 	me.indent = indent;
 	me.outdent = outdent;
+	me.lineLength = lineLength;
 
 	// Implementation
 	let lines = 0,
+		consecutiveNewLines = 0,
 		newLine = true,
 		indentValue = [ '  ' ];
 
 	function line( forced ) {
-		if ( newLine ) {
-			if ( forced ) {
-				write( '\n' );
-				lines++;
-			}
-			return;
+		if ( !newLine ) {
+			// The end of the line will be inserted on the next print.
+			newLine = true;
+			consecutiveNewLines++;
+		} else if ( forced || consecutiveNewLines < 2 ) {
+			// Insert a new blank line if forced or there isn't one yet.
+			write( '\n' );
+			consecutiveNewLines++;
 		}
-		newLine = true;
+		return me;
 	}
 
 	function print( msg, styleFn = _.identity ) {
-		return out( msg, styleFn );
+		out( msg, styleFn );
 	}
 
 	function println( msg, styleFn = _.identity ) {
-		return out( msg + '\n', styleFn );
+		if ( msg )
+			out( msg, styleFn );
+		line();
 	}
 
 	function out( msg, styleFn ) {
 		if ( !_.isString( msg ) )
 			throw new Error( 'msg is a required parameter' );
 		if ( msg.indexOf( '\n' ) > -1 ) {
-			_( msg ).split( '\n' ).each( line => {
-				out( line, styleFn );
-				newLine = true;
-			} );
+
+			if ( msg.endsWith( '\n' ) ) {
+				out( msg.substring( 0, msg.length - 1 ), styleFn );
+				line();
+			} else {
+				_( msg ).split( '\n' ).each( l => {
+					if ( l.trim().length > 0 ) {
+						out( l, styleFn );
+					}
+					line();
+				} );
+			}
 			return;
+
 		} else if ( msg.length > lineLength ) {
-			let last = msg.substring( 0, lineLength ).lastIndexOf( ' ' ), endFirst, startSecond;
-			if ( last > -1 ) {
+
+			let last = msg.substring( 0, lineLength + 1 ).lastIndexOf( ' ' ), endFirst, startSecond;
+			if ( last > Math.min( lineLength / 10, 3 ) ) {
 				endFirst = last;
 				startSecond = last + 1;
 			} else {
 				endFirst = startSecond = lineLength;
 			}
-			out( msg.substring( 0, endFirst ) + '\n', styleFn );
-			out( msg.substring( startSecond ), styleFn );
+			out( msg.substring( 0, endFirst ), styleFn );
+			line();
+			out( '  ' + msg.substring( startSecond ), styleFn );
 			return;
-		} else if ( msg.length > 0 ) {
 
+		} else if ( msg.trim().length > 0 ) {
 			if ( newLine ) {
 				if ( lines > 0 ) {
 					write( '\n' );
@@ -71,6 +87,7 @@ function Console( lineLength = LINE_LENGTH, outputStream = process.stdout ) {
 				lines++;
 			}
 			write( styleFn( msg ) );
+			consecutiveNewLines = 0;
 
 		}
 	}
