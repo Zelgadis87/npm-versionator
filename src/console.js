@@ -1,6 +1,8 @@
 
 const process = require( 'process' )
-	, _ = require( 'lodash' );
+	, inquirer = require( 'inquirer' )
+	, _ = require( 'lodash' )
+	;
 
 const LINE_LENGTH = 45;
 
@@ -14,6 +16,7 @@ function Console( lineLength = LINE_LENGTH, outputStream = process.stdout ) {
 	me.line = line;
 	me.indent = indent;
 	me.outdent = outdent;
+	me.prompt = prompt;
 	me.lineLength = lineLength;
 
 	// Implementation
@@ -48,6 +51,7 @@ function Console( lineLength = LINE_LENGTH, outputStream = process.stdout ) {
 	function out( msg, styleFn ) {
 		if ( !_.isString( msg ) )
 			throw new Error( 'msg is a required parameter' );
+
 		if ( msg.indexOf( '\n' ) > -1 ) {
 
 			if ( msg.endsWith( '\n' ) ) {
@@ -111,6 +115,14 @@ function Console( lineLength = LINE_LENGTH, outputStream = process.stdout ) {
 
 	function write( message ) {
 		outputStream.write( message );
+	}
+
+	function prompt( args ) {
+		if ( newLine ) {
+			write( '\n' );
+			newLine = false;
+		}
+		return inquirer.prompt( args );
 	}
 
 	return me;
