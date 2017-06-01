@@ -2,10 +2,7 @@
 const package = require( '../package' )
 	, Bluebird = require( 'bluebird' )
 	, child_process = require( 'child_process' )
-	, chalk = require( 'chalk' )
 	, fs = require( 'fs' )
-	, _ = require( 'lodash' )
-	, logger = require( './logger.js' )
 	, ProcedureError = require( './utils.js' ).ProcedureError
 	;
 
@@ -20,36 +17,13 @@ npm.validate = async function() {
 		throw new ProcedureError( `Folder doesn't seem to contain a valid NPM package. To create a new package, use:`, 'npm init' );
 };
 
-npm.test = async function() {
-
-	let logTest = ( error, data ) => {
-		if ( data === null || data === undefined )
-			return;
-		let lines = data.toString().split( '\n' ),
-			style = chalk.bold,
-			newline = false;
-		for ( let line of lines ) {
-			if ( newline ) {
-				logger.line( true );
-			}
-			logger.out( style( line ) );
-			newline = true;
-		}
-	};
+npm.test = async function( data_out, data_err ) {
 
 	return new Bluebird( ( resolve, reject ) => {
-
-		logger.info( 'Testing NPM package: ', 'npm test -- --color'  );
-		logger.indent();
-
 		let test = child_process.spawn( /^win/.test( process.platform ) ? 'npm.cmd' : 'npm', [ 'test', '--', '--color' ] );
-		test.stdout.on( 'data', _.partial( logTest, false ) );
-		test.stderr.on( 'data', _.partial( logTest, true ) );
-		test.on( 'close', ( code ) => {
-			logger.outdent();
-			logger.line( true );
-			code === 0 ? resolve() : reject();
-		} );
+		test.stdout.on( 'data', x => data_out( x.toString() ) );
+		test.stderr.on( 'data', x => data_err( x.toString() ) );
+		test.on( 'close', code => { return code === 0 ? resolve() : reject(); } );
 
 	} );
 };

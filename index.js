@@ -4,7 +4,7 @@ const Bluebird = require( 'bluebird' )
 	, process = require( 'process' )
 	, yargs = require( 'yargs' ).argv
 
-	, logger = require( './src/logger.js' )
+	, console = require( './src/my-console.js' )
 	, ProcedureError = require( './src/utils.js' ).ProcedureError
 	, main = require( './src/main.js' )
 	;
@@ -17,21 +17,23 @@ Bluebird
 	.try( activate )
 	.then( () => process.exit( 0 ) )
 	.catch( ( err ) => {
-		logger.line( true );
+		console.line( true );
 		if ( err instanceof ProcedureError ) {
-			logger.error( err.message, err.command );
+			console.error( err.message, err.command );
 			if ( yargs.verbose && err.stacktrace ) {
-				logger.error( err.stacktrace );
+				console.indent();
+				console.error( err.stacktrace );
+				console.outdent();
 			}
 		} else {
-			logger.error( 'An unexpected error has occured:' );
-			if ( yargs.verbose ) {
-				logger.error( err.stack );
+			console.error( 'An unexpected error has occured:' );
+			if ( yargs.verbose && err.stack ) {
+				console.error( err.stack );
 			} else {
-				logger.error( err.message );
+				console.error( err.message );
 			}
 		}
-		logger.error( 'Execution aborted.' );
+		console.error( 'Execution aborted.' );
 		process.exit( 1 );
 	} )
 	;

@@ -3,20 +3,16 @@ const Bluebird = extendBluebird( require( 'bluebird' ) )
 	, _ = require( 'lodash' )
 	, semver = require( 'semver' )
 	, process = require( 'process' )
-	, inquirer = extendInquirer( require( 'inquirer' ) )
 	, fs = Bluebird.promisifyAll( require( 'fs' ) )
 	, moment = require( 'moment' )
 	, chalk = require( 'chalk' )
-	, yargs = require( 'yargs' ).argv
 
-	, logger = require( './logger.js' )
+	, console = require( './my-console.js' )
 	, npm = require( './npm.js' )
 	, git = require( './git.js' )
 	, execute = require( './execute.js' )
 	, ProcedureError = require( './utils.js' ).ProcedureError
 	;
-
-const LINE_LENGHT = 45;
 
 const SEMVER_PATCH = 'patch'
 	, SEMVER_MINOR = 'minor'
@@ -51,17 +47,16 @@ let APP_VERSION,
 	;
 
 let log = ( m, c, level = 'info' ) => {
-	let doLog = logger[ level ];
+	let doLog = console[ level ];
 	if ( m === null || m === undefined )
 		return doLog( '' );
 	if ( c === null || c === undefined )
 		return doLog( m );
-	let diff = Math.max( 0, LINE_LENGHT - ( m.toString().length + c.toString().length + 1 ) );
+	let diff = Math.max( 0, console.lineLength - ( m.toString().length + c.toString().length + 1 ) );
 	if ( diff > 0 )
 		c = _.repeat( ' ', diff ) + c;
 	return doLog( m, c );
 };
-
 
 function extendInquirer( inquirer ) {
 
@@ -76,8 +71,8 @@ function extendInquirer( inquirer ) {
 	// // Replace default inquirer prompt with a new one
 	let _prompt = inquirer.createPromptModule();
 	inquirer.prompt = ( args ) => {
-		logger.out( '\n' );
-		return _prompt( args ).then( ( data ) => { logger.out( '' ); return data; } );
+		console.print( '\n' );
+		return _prompt( args ).then( ( data ) => { console.print( '' ); return data; } );
 	};
 
 	return inquirer;
@@ -101,7 +96,7 @@ function extendBluebird( Bluebird ) {
 function announceAndExecuteAsync( cmd ) {
 	return Bluebird
 		.resolve( cmd )
-		.tap( logger.command )
+		.tap( console.command )
 		.then( execute );
 }
 
@@ -123,13 +118,13 @@ async function askForChangelog( versionType, versionNumber ) {
 		}
 	];
 
-	return inquirer.prompt( questions ).then( answers => answers.entry );
+	return console.prompt( questions ).then( answers => answers.entry );
 
 }
 
 async function askForConfirmation( versionNumber ) {
 
-	return inquirer.prompt( {
+	return console.prompt( {
 		name: 'confirm',
 		type: 'confirm',
 		message: `Are you sure you wish to update your package to version ${ chalk.cyan( versionNumber ) } ? ${ chalk.bold.yellow( 'This action cannot be easily undone.' ) }`,
@@ -158,10 +153,10 @@ async function start() {
 	// We show the name and version of this application.
 	//
 
-	logger.line();
+	console.line();
 
 	APP_VERSION = await npm.getVersion();
-	logger.title( _.pad( `Welcome to Version Generator v${ APP_VERSION }`, LINE_LENGHT ) );
+	console.title( _.pad( `Welcome to Version Generator v${ APP_VERSION }`, console.lineLength ) );
 
 	//
 	// ----------------------------------------------------
@@ -171,7 +166,7 @@ async function start() {
 	// We require a valid NPM project.
 	//
 
-	logger.line();
+	console.line();
 
 	await git.validate();
 	await npm.validate();
@@ -183,7 +178,7 @@ async function start() {
 	// We inform the user about the project status.
 	//
 
-	logger.line();
+	console.line();
 
 	BRANCH = await git.getCurrentBranch();
 	log( `You currently are on branch:`, BRANCH );
@@ -249,31 +244,29 @@ async function start() {
 	//   so no more automatic failures should occur.
 	//
 
-	logger.line();
+	console.line();
 
 	REMOTE_REPOSITORIES = await git.getRemoteRepositories();
 	if ( REMOTE_REPOSITORIES.length === 0 ) {
-		logger.warn( 'No remote repository found.' );
-		logger.warn( '  Add one with:', 'git remote add <name> <url>' );
+		console.warn( 'No remote repository found.' );
+		console.warn( '  Add one with:', 'git remote add <name> <url>' );
 	}
 
 	if ( !fs.existsSync( '.gitignore' ) )
-		logger.warn( '.gitignore file missing, it is suggested to create it before committing unwanted files.' );
+		console.warn( '.gitignore file missing, it is suggested to create it before committing unwanted files.' );
 	if ( !fs.existsSync( 'CHANGELOG.md' ) )
-		logger.warn( 'CHANGELOG.md file missing, it is suggested to create it before a public release.' );
+		console.warn( 'CHANGELOG.md file missing, it is suggested to create it before a public release.' );
 	if ( !fs.existsSync( 'README.md' ) )
-		logger.warn( 'README.md file missing, it is suggested to create it before a public release.' );
+		console.warn( 'README.md file missing, it is suggested to create it before a public release.' );
 	if ( !fs.existsSync( 'LICENSE' ) )
-		logger.warn( 'LICENSE file missing, it is suggested to create it before a public release.' );
+		console.warn( 'LICENSE file missing, it is suggested to create it before a public release.' );
 
 	let actionsRequired = getActionsRequiredToVersionate();
 
 	if ( actionsRequired.length > 0 ) {
 
-		logger.warn( 'Cannot create a new version in the current state' );
-		logger.warn( actionsRequired[0], actionsRequired[1] );
-		logger.line();
-
+		console.warn( actionsRequired[0], actionsRequired[1] );
+		console.line();
 
 	} else {
 
@@ -294,7 +287,8 @@ async function start() {
 	// We select which actions are available to the user
 	//
 
-	logger.line();
+	console.line();
+	console.line(true);
 
 	await ask();
 
@@ -313,7 +307,10 @@ function ask() {
 	// TODO: Show the list of commits that would be added. Should be disabled by default.
 	// git log master..develop --oneline
 
-	return inquirer.prompt( {
+	if ( choices.length === 0 )
+		process.exit( 0 );
+
+	return console.prompt( {
 		name: 'value',
 		type: 'list',
 		message: 'Select the action to execute.',
@@ -374,7 +371,7 @@ function askReleaseType() {
 	// TODO: Show the list of commits that would be added. Should be disabled by default.
 	// git log master..develop --oneline
 
-	return inquirer.prompt( {
+	return console.prompt( {
 		name: 'value',
 		type: 'list',
 		message: 'Select release type.',
@@ -393,7 +390,7 @@ function askPrereleaseType() {
 		preversionChoice( 'New pre-minor version...', SEMVER_PRE_MINOR ),
 		preversionChoice( 'New pre-major version...', SEMVER_PRE_MAJOR )
 	];
-	return inquirer.prompt( {
+	return console.prompt( {
 		name: 'value',
 		type: 'list',
 		message: 'Start a new prerelease:',
@@ -411,7 +408,7 @@ function askPrereleaseIdentifier( prereleaseType ) {
 		identifierChoice( 'Beta', 'beta' ),
 		identifierChoice( 'Release Candidate', 'rc' )
 	];
-	return inquirer.prompt( {
+	return console.prompt( {
 		name: 'value',
 		type: 'list',
 		message: 'Choose prerelease type:',
@@ -457,11 +454,17 @@ async function versionate( versionType, versionIdentifier = '' ) {
 	// If any of these fails, we abort the process.
 	//
 
-	logger.line( true );
+	console.line( true );
 
-	await npm.test().catch( () => { throw new ProcedureError( 'Tests failed.' ); } );
-	logger.info( 'All tests passed.' );
+	console.info( 'Testing NPM package: ', 'npm test -- --color'  );
+	console.indent();
+	console.lineLength *= 13;
 
+	await npm.test( console.info, console.error )
+		.then( () => console.outdent().info( 'All tests passed.\n\n' ), ex => { console.outdent(); throw new ProcedureError( 'Tests failed.', null, ex ); } );
+
+	console.lineLength /= 13;
+		
 	//
 	// ----------------------------------------------------
 	// Input section
@@ -472,7 +475,7 @@ async function versionate( versionType, versionIdentifier = '' ) {
 	//   to automatically update some of the project files.
 	//
 
-	logger.line();
+	console.line();
 
 	let NEXT_VERSION = semver.inc( VERSION, versionType, versionIdentifier );
 
@@ -492,7 +495,7 @@ async function versionate( versionType, versionIdentifier = '' ) {
 	//   the repository.
 	//
 
-	logger.line();
+	console.line();
 
 	let PROCEED = await askForConfirmation( NEXT_VERSION );
 	if ( !PROCEED )
@@ -519,7 +522,7 @@ async function versionate( versionType, versionIdentifier = '' ) {
 	// - Switch to develop and merge 'releases/vX'
 
 
-	logger.line( true );
+	console.line( true );
 
 	let RELEASE_BRANCH = `releases/${ NEXT_VERSION}`;
 	let RELEASE_TAG = `v${ NEXT_VERSION }`;
@@ -527,8 +530,8 @@ async function versionate( versionType, versionIdentifier = '' ) {
 	if ( CHANGELOG ) {
 		writeChangelogEntry( CHANGELOG );
 
-		logger.info( 'Changelog updated.' );
-		logger.line();
+		console.info( 'Changelog updated.' );
+		console.line();
 	}
 
 	if ( !IS_UNSTABLE )
@@ -568,25 +571,25 @@ async function versionate( versionType, versionIdentifier = '' ) {
 	//   to release the new version of its project.
 	//
 
-	logger.line();
+	console.line();
 
-	logger.info( `Versioning complete.` );
-	logger.info( `Project updated to version: ${ NEXT_VERSION }.` );
+	console.info( `Versioning complete.` );
+	console.info( `Project updated to version: ${ NEXT_VERSION }.` );
 
 	if ( REMOTE_REPOSITORIES.length > 1 ) {
-		logger.info( `To synchronize your changes to the configured Git repositories, use:` );
+		console.info( `To synchronize your changes to the configured Git repositories, use:` );
 		for ( let rep of REMOTE_REPOSITORIES ) {
-			logger.info( `  for ${ rep }:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
+			console.info( `  for ${ rep }:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
 		}
 	} else if ( REMOTE_REPOSITORIES.length === 1 ) {
 		let rep = REMOTE_REPOSITORIES[0];
-		logger.info( `To synchronize your changes to the ${ rep } Git repository, use:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
+		console.info( `To synchronize your changes to the ${ rep } Git repository, use:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
 	}
 
 	if ( IS_UNSTABLE ) {
-		logger.info( `To publish your unstable changes to the npm repository, use:`, 'npm publish --tag=unstable' );
+		console.info( `To publish your unstable changes to the npm repository, use:`, 'npm publish --tag=unstable' );
 	} else {
-		logger.info( `To publish your changes to the npm repository, use:`, 'npm publish --tag=latest' );
+		console.info( `To publish your changes to the npm repository, use:`, 'npm publish --tag=latest' );
 	}
 
 	return true;
