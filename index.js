@@ -20,6 +20,9 @@ Bluebird
 		logger.line( true );
 		if ( err instanceof ProcedureError ) {
 			logger.error( err.message, err.command );
+			if ( yargs.verbose && err.stacktrace ) {
+				logger.error( err.stacktrace );
+			}
 		} else {
 			logger.error( 'An unexpected error has occured:' );
 			if ( yargs.verbose ) {
