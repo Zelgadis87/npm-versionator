@@ -13,13 +13,19 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "npm run eslint",
-    "eslint": "eslint -c .eslintrc **/*.js"
+    "test": "npm run eslint && npm run mocha",
+    "mocha": "mocha src/**/*.spec.js",
+    "eslint": "eslint -c .eslintrc src/**/*.js",
+    "coverage": "nyc npm test",
+    "postcoverage": "nyc report --reporter=lcov && start coverage/lcov-report/index.html"
   },
   "author": "Zelgadis87",
   "license": "ISC",
   "devDependencies": {
-    "eslint": "^3.19.0"
+    "chai": "^4.0.0",
+    "eslint": "^3.19.0",
+    "mocha": "^3.4.2",
+    "nyc": "^11.0.1"
   },
   "dependencies": {
     "bluebird": "^3.5.0",
