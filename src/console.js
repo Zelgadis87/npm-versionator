@@ -49,9 +49,10 @@ function Console( lineLength = LINE_LENGTH, outputStream = process.stdout ) {
 	}
 
 	function out( msg, styleFn ) {
-		if ( !_.isString( msg ) )
+		if ( !_.isString( msg ) && !msg.toString )
 			throw new Error( 'msg is a required parameter' );
 
+		msg = msg.toString();
 		if ( msg.indexOf( '\n' ) > -1 ) {
 
 			if ( msg.endsWith( '\n' ) ) {
