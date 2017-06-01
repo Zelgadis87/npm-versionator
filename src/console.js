@@ -63,14 +63,14 @@ function Console( lineLength = LINE_LENGTH, outputStream = process.stdout ) {
 			}
 			return;
 
-		} else if ( msg.length > lineLength ) {
+		} else if ( msg.length > me.lineLength ) {
 
-			let last = msg.substring( 0, lineLength + 1 ).lastIndexOf( ' ' ), endFirst, startSecond;
-			if ( last > Math.min( lineLength / 10, 3 ) ) {
+			let last = msg.substring( 0, me.lineLength + 1 ).lastIndexOf( ' ' ), endFirst, startSecond;
+			if ( last > Math.min( me.lineLength / 10, 3 ) ) {
 				endFirst = last;
 				startSecond = last + 1;
 			} else {
-				endFirst = startSecond = lineLength;
+				endFirst = startSecond = me.lineLength;
 			}
 			out( msg.substring( 0, endFirst ), styleFn );
 			line();

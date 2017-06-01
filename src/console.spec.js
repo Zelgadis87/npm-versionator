@@ -129,6 +129,12 @@ describe( 'console', function() {
 			expect( testStream.output ).to.be.equal( '  abcdefghil\n    mnopqrst\n    uvz' );
 		} );
 
+		it( 'Should allow changing line length at runtime', function() {
+			console.lineLength = 9999;
+			console.print( 'abcdefghilmnopqrstuvz' );
+			expect( testStream.output ).to.be.equal( '  abcdefghilmnopqrstuvz' );
+		} );
+
 		it( 'Should stylize text', function() {
 			console.print( 'ab', chalk.yellow );
 			expect( testStream.output ).to.be.equal( '  ' + chalk.yellow( 'ab' ) );
