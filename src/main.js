@@ -191,7 +191,6 @@ async function start() {
 		log( `Latest tag found:`, LAST_TAG );
 		tagFound = true;
 	} else {
-		LAST_TAG = '0.0.0';
 		log( `Latest tag found:`, '---', 'warn' );
 	}
 
@@ -203,6 +202,7 @@ async function start() {
 
 	if ( !tagFound ) {
 		VERSION = PACKAGE_VERSION;
+		LAST_TAG = 'master';
 	} else {
 		let sv = semver( LAST_TAG ), sp = semver( PACKAGE_VERSION );
 		if ( sv.major !== sp.major || sv.minor !== sp.minor || sv.patch !== sp.patch )
@@ -220,14 +220,14 @@ async function start() {
 	UNTRACKED = await git.countUntrackedFiles();
 	log( `Untracked files detected:`, UNTRACKED, UNTRACKED > 0 ? 'warn' : 'info' );
 
-	DIFF_COMMITS = await git.countDiffCommits( tagFound ? LAST_TAG : 'master' );
+	DIFF_COMMITS = await git.countDiffCommits( LAST_TAG );
 	log( `Commits since ${ VERSION }:`, DIFF_COMMITS, DIFF_COMMITS === 0 && !IS_PRERELEASE_VERSION ? 'warn' : 'info' );
 
 	DIFF_MASTER_COMMITS = await git.countDiffCommits( 'master' );
 	if ( DIFF_MASTER_COMMITS !== DIFF_COMMITS )
 		log( `Commits since last stable release:`, DIFF_MASTER_COMMITS, DIFF_MASTER_COMMITS === 0 && !IS_PRERELEASE_VERSION ? 'warn' : 'info' );
 
-	DIFF_FILES = await git.countDiffFiles( tagFound ? LAST_TAG : 'master' );
+	DIFF_FILES = await git.countDiffFiles( LAST_TAG );
 	log( `Files changed since ${ VERSION }:`, DIFF_FILES, DIFF_FILES === 0 && !IS_PRERELEASE_VERSION ? 'warn' : 'info' );
 
 	DIFF_MASTER_FILES = await git.countDiffFiles( 'master' );
