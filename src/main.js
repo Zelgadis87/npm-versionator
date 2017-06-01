@@ -288,7 +288,6 @@ async function start() {
 	//
 
 	console.line();
-	console.line(true);
 
 	await ask();
 
