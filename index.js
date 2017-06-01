@@ -34,7 +34,7 @@ Bluebird
 				console.error( err.message );
 			}
 		}
-		console.error( 'Execution aborted.' );
+		console.error( 'Execution aborted.\n\n' );
 		process.exit( 1 );
 	} )
 	;
