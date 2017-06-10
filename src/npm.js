@@ -12,6 +12,11 @@ npm.getVersion = async function() {
 	return package.version;
 };
 
+npm.readPackageVersion = async function() {
+	let packageJson = await fs.readFileAsync( 'package.json', 'UTF-8' );
+	return JSON.parse( packageJson ).version;
+};
+
 npm.validate = async function() {
 	if ( !fs.existsSync( 'package.json' ) )
 		throw new ProcedureError( `Folder doesn't seem to contain a valid NPM package. To create a new package, use:`, 'npm init' );
