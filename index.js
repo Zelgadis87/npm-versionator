@@ -298,7 +298,7 @@ async function activate() {
 	if ( tagFound && !semver.valid( LAST_TAG ) )
 		throw new ProcedureError( 'Invalid tag found according to SEMVER. Please tag your releases using semver.' );
 
-	let PACKAGE_VERSION = await npm.getVersion();
+	let PACKAGE_VERSION = await npm.readPackageVersion();
 	log( `Package version:`, PACKAGE_VERSION );
 
 	if ( !semver.valid( PACKAGE_VERSION ) )
