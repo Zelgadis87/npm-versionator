@@ -544,6 +544,11 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 	await announceAndExecuteAsync( `npm version ${ NEXT_VERSION } --git-tag-version=false` );
 	await announceAndExecuteAsync( `git add package.json` );
+
+	if ( fs.statSync( 'package-lock.json' ) ) {
+		await announceAndExecuteAsync( `git add package-lock.json` );
+	}
+
 	await announceAndExecuteAsync( `git commit -m "${ NEXT_VERSION }"` );
 
 	if ( !IS_UNSTABLE ) {
