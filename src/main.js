@@ -140,7 +140,7 @@ function writeChangelogEntry( entry ) {
 		content = fs.readFileSync( 'CHANGELOG.md', 'UTF-8' );
 	}
 
-	fs.writeFileSync( 'CHANGELOG.md', newline + entry + content );
+	fs.writeFileSync( 'CHANGELOG.md', newline + entry.trim() + newline + content );
 
 }
 
