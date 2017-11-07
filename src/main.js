@@ -545,9 +545,18 @@ async function versionate( versionType, versionIdentifier = '' ) {
 	await announceAndExecuteAsync( `npm version ${ NEXT_VERSION } --git-tag-version=false` );
 	await announceAndExecuteAsync( `git add package.json` );
 
-	if ( fs.statSync( 'package-lock.json' ) ) {
-		await announceAndExecuteAsync( `git add package-lock.json` );
+	let hasPackageLock = false;
+	try {
+		if ( fs.statSync( 'package-lock.json' ).isFile() ) {
+			hasPackageLock = true;
+		}
+	} catch ( e ) {
+		if ( e.code !== 'ENOENT' ) {
+			throw e;
+		}
 	}
+	if ( hasPackageLock )
+		await announceAndExecuteAsync( `git add package-lock.json` );
 
 	await announceAndExecuteAsync( `git commit -m "${ NEXT_VERSION }"` );
 
