@@ -9,6 +9,6 @@ async function execute( cmd ) {
 			if ( err ) reject( err );
 			else resolve( stdout.trim() );
 		} );
-	} );
+	} ).delay( 150 );
 }
 module.exports = execute;
