@@ -81,13 +81,13 @@ function extendInquirer( inquirer ) {
 
 function extendBluebird( Bluebird ) {
 	Bluebird.config( {
-	// Enable warnings
+		// Enable warnings
 		warnings: true,
-	// Enable long stack traces
+		// Enable long stack traces
 		longStackTraces: true,
-	// Enable cancellation
+		// Enable cancellation
 		cancellation: true,
-	// Enable monitoring
+		// Enable monitoring
 		monitoring: true
 	} );
 	return Bluebird;
@@ -212,7 +212,7 @@ async function start() {
 
 	let match = LAST_TAG.match( /-(alpha|beta|rc)\.([0-9])+$/ );
 	IS_PRERELEASE_VERSION = match !== null;
-	[ PRERELEASE_IDENTIFIER, PRERELEASE_NUMBER ] = match ? [ match[1], match[2] ] : [ null, null ];
+	[ PRERELEASE_IDENTIFIER, PRERELEASE_NUMBER ] = match ? [ match[ 1 ], match[ 2 ] ] : [ null, null ];
 
 	if ( IS_PRERELEASE_VERSION )
 		log( `Prerelease information:`, `${ PRERELEASE_IDENTIFIER } ${ parseInt( PRERELEASE_NUMBER ) }`, 'info' );
@@ -265,7 +265,7 @@ async function start() {
 
 	if ( actionsRequired.length > 0 ) {
 
-		console.warn( actionsRequired[0], actionsRequired[1] );
+		console.warn( actionsRequired[ 0 ], actionsRequired[ 1 ] );
 		console.line();
 
 	} else {
@@ -293,7 +293,7 @@ async function start() {
 
 }
 
-let choice = ( n, v ) => { return { name : n, value: v }; };
+let choice = ( n, v ) => { return { name: n, value: v }; };
 let semverFormat = ( name, type, identifier = '' ) => `${ name } ( ${ chalk.cyan.bold( semver.inc( VERSION, type, identifier ) ) } )`;
 
 function ask() {
@@ -336,7 +336,7 @@ function askReleaseType() {
 	if ( ALLOW_PRERELEASE ) {
 
 		let isAlpha = PRERELEASE_IDENTIFIER === 'alpha',
-			isBeta =  PRERELEASE_IDENTIFIER === 'beta',
+			isBeta = PRERELEASE_IDENTIFIER === 'beta',
 			isRC = PRERELEASE_IDENTIFIER === 'rc';
 
 		if ( IS_PRERELEASE_VERSION && !isAlpha && !isBeta && !isRC )
@@ -414,7 +414,7 @@ function askPrereleaseIdentifier( prereleaseType ) {
 		choices: choices,
 		default: 1
 	} )
-	.then( answers => answers.value === option_back ? askPrereleaseType() : versionate( prereleaseType, answers.value ) );
+		.then( answers => answers.value === option_back ? askPrereleaseType() : versionate( prereleaseType, answers.value ) );
 }
 
 function getActionsRequiredToVersionate() {
@@ -455,7 +455,7 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 	console.line( true );
 
-	console.info( 'Testing NPM package: ', 'npm test -- --color'  );
+	console.info( 'Testing NPM package: ', 'npm test -- --color' );
 	console.indent();
 	console.lineLength *= 13;
 
@@ -463,7 +463,7 @@ async function versionate( versionType, versionIdentifier = '' ) {
 		.then( () => console.outdent().info( 'All tests passed.\n\n' ), ex => { console.outdent(); throw new ProcedureError( 'Tests failed.', null, ex ); } );
 
 	console.lineLength /= 13;
-		
+
 	//
 	// ----------------------------------------------------
 	// Input section
@@ -523,7 +523,7 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 	console.line( true );
 
-	let RELEASE_BRANCH = `releases/${ NEXT_VERSION}`;
+	let RELEASE_BRANCH = `releases/${ NEXT_VERSION }`;
 	let RELEASE_TAG = `v${ NEXT_VERSION }`;
 
 	if ( CHANGELOG ) {
@@ -586,7 +586,7 @@ async function versionate( versionType, versionIdentifier = '' ) {
 			console.info( `  for ${ rep }:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
 		}
 	} else if ( REMOTE_REPOSITORIES.length === 1 ) {
-		let rep = REMOTE_REPOSITORIES[0];
+		let rep = REMOTE_REPOSITORIES[ 0 ];
 		console.info( `To synchronize your changes to the ${ rep } Git repository, use:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
 	}
 
