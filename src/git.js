@@ -4,7 +4,7 @@ const Bluebird = require( 'bluebird' )
 	, utils = require( './utils.js' )
 	;
 
-let git = function() {};
+let git = {};
 
 git.validate = async function() {
 	let handleError = ( message, command = null ) => {
@@ -54,8 +54,7 @@ git.countDiffFiles = async function( from ) {
 };
 
 git.isRepositoryClean = async function() {
-	// Removed, as this would return the wrong value in some cases: http://stackoverflow.com/a/2659808/90006
-	// return execute( 'git diff-index --quiet HEAD --', false ).then( () => true, () => false );
+	// return execute( 'git diff-index --quiet HEAD --', false ).then( () => true, () => false ); // Removed, as this would return the wrong value in some cases: http://stackoverflow.com/a/2659808/90006
 	return Bluebird.all( [
 		execute( 'git diff-index --quiet --cached HEAD' ).then( () => true, () => false ),
 		execute( 'git diff-files --quiet' ).then( () => true, () => false )

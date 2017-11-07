@@ -1,9 +1,10 @@
 
 class ProcedureError extends Error {
 
-	constructor( message, command ) {
+	constructor( message, command, error ) {
 		super( message );
 		this.command = command;
+		this.stacktrace = error ? error.stack : null;
 	}
 
 }

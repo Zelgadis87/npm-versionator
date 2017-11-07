@@ -1,4 +1,9 @@
 
+## v0.6.0 (2017/11/07 21:20)
+
+- Created infrastructure for a more interactive user experience
+- Fixed package-lock.json handling
+
 ## v0.5.0 (2017/05/12 21:04)
 - Massive code refactoring
 
