@@ -65,4 +65,8 @@ git.getRemoteRepositories = async function() {
 	return execute( 'git remote' ).then( output => output.length > 0 ? output.split( '\n' ) : [] );
 };
 
+git.log = async function( from, to ) {
+	return execute( `git log ${from}..${to} --oneline` );
+};
+
 module.exports = git;

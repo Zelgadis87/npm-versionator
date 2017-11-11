@@ -303,10 +303,10 @@ function ask() {
 
 	choices.push( choice( 'Create a new version', askReleaseType, { disabled: !ALLOW_RELEASE && !ALLOW_PRERELEASE } ) );
 
-	choices.push( choice( `Exit`, () => process.exit( 0 ) ) );
+	if ( DIFF_COMMITS > 0 )
+		choices.push( choice( `Show ${ DIFF_COMMITS } commits since ${ LAST_TAG }`, () => showGitLog( LAST_TAG, 'HEAD' ).tap( ask ) ) );
 
-	// TODO: Show the list of commits that would be added. Should be disabled by default.
-	// git log master..develop --oneline
+	choices.push( choice( `Exit`, () => process.exit( 0 ) ) );
 
 	return console.prompt( {
 		name: 'value',
@@ -414,6 +414,21 @@ function askPrereleaseIdentifier( prereleaseType ) {
 		default: 1
 	} )
 		.then( answers => answers.value === option_back ? askPrereleaseType() : versionate( prereleaseType, answers.value ) );
+}
+
+function showGitLog( from, to ) {
+
+	return Bluebird.resolve( git.log( from, to ) )
+		.tap( logs => {
+			console.splitLongLines = false;
+			console.indent( '>' );
+			console.println();
+			console.println( logs, chalk.yellow );
+			console.println();
+			console.outdent();
+			console.splitLongLines = true;
+		} );
+
 }
 
 function getActionsRequiredToVersionate() {
