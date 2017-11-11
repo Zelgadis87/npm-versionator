@@ -3,6 +3,8 @@ const package = require( '../package' )
 	, Bluebird = require( 'bluebird' )
 	, child_process = require( 'child_process' )
 	, fs = require( 'fs' )
+	, _ = require( 'lodash' )
+	, supportsColor = require( 'supports-color' )
 	, ProcedureError = require( './utils.js' ).ProcedureError
 	;
 
@@ -25,11 +27,16 @@ npm.validate = async function() {
 npm.test = async function( data_out, data_err ) {
 
 	return new Bluebird( ( resolve, reject ) => {
-		let test = child_process.spawn( /^win/.test( process.platform ) ? 'npm.cmd' : 'npm', [ 'test' ] );
+
+		let env = _.extend( {}, process.env );
+		if ( supportsColor.stdout ) {
+			env.FORCE_COLOR = env.FORCE_COLOR === undefined ? 1 : env.FORCE_COLOR;
+		}
+
+		let test = child_process.spawn( /^win/.test( process.platform ) ? 'npm.cmd' : 'npm', [ 'test' ], { env: env } );
 		test.stdout.on( 'data', x => data_out( x.toString() ) );
 		test.stderr.on( 'data', x => data_err( x.toString() ) );
 		test.on( 'close', code => { return code === 0 ? resolve() : reject(); } );
-
 	} );
 };
 
