@@ -499,12 +499,14 @@ async function showGitLog( from, to ) {
 }
 
 async function npmTest() {
-	console.info( 'Testing NPM package: ', 'npm test -- --color' );
+
+	console.line();
+	console.info( 'Testing NPM package: ', 'npm test' );
 	console.indent();
 	console.splitLongLines = false;
 
-	await npm.test( console.info, console.error )
-		.then( () => console.outdent().info( 'All tests passed.\n\n' ), ex => { console.outdent(); throw new ProcedureError( 'Tests failed.', null, ex ); } );
+	await npm.test( console.print, console.error )
+		.then( () => console.outdent().info( 'All tests passed.\n\n' ), ex => { console.outdent(); throw new ProcedureError( 'Tests failed.', null, ex ); } );;
 
 	console.splitLongLines = true;
 }
