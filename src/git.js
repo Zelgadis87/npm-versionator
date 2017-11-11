@@ -72,7 +72,7 @@ git.log = async function( from, to = 'HEAD' ) {
 		.then( lines => lines.reverse() )
 		.map( line => {
 			let [ all, id, message ] = line.match( /^([a-z0-9]+)(.*)$/ );
-			return { id: id, message: message.trim() };
+			return { id: id, message: message.trim(), fixup: message.trim().startsWith( 'fixup!' ) };
 		} );
 };
 

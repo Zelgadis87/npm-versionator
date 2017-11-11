@@ -256,7 +256,7 @@ async function start() {
 
 	if ( EVERYTHING_COMMITTED ) {
 		let logs = await git.log( LAST_TAG, 'HEAD' );
-		FIXUP_COMMITS = logs.filter( l => l.message.startsWith( 'fixup!' ) );
+		FIXUP_COMMITS = logs.filter( l => l.fixup );
 		if ( FIXUP_COMMITS.length ) {
 			console.warn( `Found ${ FIXUP_COMMITS.length } fixup commits, which should be squashed before proceeding:`, `git rebase -i --autosquash ${ LAST_TAG }` );
 			console.line();
@@ -487,12 +487,12 @@ async function showGitLog( from, to ) {
 
 	return Bluebird.resolve( [ from, to ] )
 		.spread( git.log )
-		.map( log => `${ log.id } ${ log.message }` )
+		.map( log => `${ chalk[ log.fixup ? 'red' : 'yellow' ]( log.id ) } ${ chalk[ log.fixup ? 'red' : 'white' ]( log.message ) }` )
 		.tap( logs => {
 			console.splitLongLines = false;
 			console.indent( '>' );
 			console.println();
-			logs.forEach( m => console.println( m, chalk.yellow ) );
+			logs.forEach( m => console.println( m ) );
 			console.println();
 			console.outdent();
 			console.splitLongLines = true;
