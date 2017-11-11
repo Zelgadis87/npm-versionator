@@ -276,8 +276,7 @@ async function start() {
 		if ( FIXUP_COMMITS.length ) {
 			console.warn( `Found ${ FIXUP_COMMITS.length } fixup commits, which should be squashed before proceeding:`, `git rebase -i --autosquash ${ LAST_TAG }` );
 			console.line();
-			// TODO: While nice, it currently doesn't work, because the user is redirect to vim, but he cannot write there..
-			// TASKS.push( { message: 'Clean fixup commits', command: `git rebase -i --autosquash ${ LAST_TAG }` } );
+			TASKS.push( { message: 'Clean fixup commits', command: `git rebase -i --autosquash ${ LAST_TAG }`, interactive: 1, warning: 1 } );
 		}
 	}
 
@@ -548,8 +547,7 @@ function getActionsRequiredToVersionate() {
 
 	if ( !EVERYTHING_COMMITTED ) {
 		// There are some files yet to be commited
-		// TODO: Do something similar to the below. Need to add the message to the user, otherwise he gets stuck on a blank console line.
-		// TASKS.push( { message: 'Commit all pending edits', command: `git commit -a`, restart: 1 } );
+		TASKS.push( { message: 'Commit all pending edits', command: `git commit -a`, restart: 1, interactive: 1, warning: 1 } );
 		return [ 'Repository not clean, please commit all your files before creating a new version:', 'git commit -a' ];
 	}
 
