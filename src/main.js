@@ -260,6 +260,8 @@ async function start() {
 		if ( FIXUP_COMMITS.length ) {
 			console.warn( `Found ${ FIXUP_COMMITS.length } fixup commits, which should be squashed before proceeding:`, `git rebase -i --autosquash ${ LAST_TAG }` );
 			console.line();
+			// TODO: While nice, it currently doesn't work, because the user is redirect to vim, but he cannot write there..
+			// TASKS.push( { message: 'Clean fixup commits', command: `git rebase -i --autosquash ${ LAST_TAG }` } );
 		}
 	}
 
@@ -337,7 +339,10 @@ function ask() {
 		for ( let task of TASKS ) {
 			console.task( task );
 			if ( !task.done )
-				choices.push( choice( task.message, () => announceAndExecuteAsync( task.command ).then( () => { task.done = true; return ask(); } ) ) );
+				choices.push( choice( task.message, () => announceAndExecuteAsync( task.command ).then( () => {
+					task.done = true;
+					return task.restart ? start() : ask();
+				} ) ) );
 		}
 
 		console.line();
@@ -519,9 +524,12 @@ function getActionsRequiredToVersionate() {
 		// Not a SemVer package
 		return [ 'Package is in an invalid version according to SemVer.' ];
 
-	if ( !EVERYTHING_COMMITTED )
+	if ( !EVERYTHING_COMMITTED ) {
 		// There are some files yet to be commited
+		// TODO: Do something similar to the below. Need to add the message to the user, otherwise he gets stuck on a blank console line.
+		// TASKS.push( { message: 'Commit all pending edits', command: `git commit -a`, restart: 1 } );
 		return [ 'Repository not clean, please commit all your files before creating a new version:', 'git commit -a' ];
+	}
 
 	if ( BRANCH !== 'develop' )
 		// We are on an invalid branch
