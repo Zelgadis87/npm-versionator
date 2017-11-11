@@ -321,7 +321,7 @@ function ask() {
 
 		if ( DIFF_COMMITS > 0 ) {
 			choices.push( choice( `Show ${ DIFF_COMMITS } commits since ${ LAST_TAG }`, () => showGitLog( LAST_TAG, 'HEAD' ).then( ask ) ) );
-			choices.push( choice( `Execute tests`, () => npmTest().then( ask ) ) );
+			choices.push( choice( `Execute tests`, () => npmTest().catch( e => console.error( 'Tests failed' ) ).then( ask ) ) );
 		}
 
 	}
