@@ -8,7 +8,9 @@ async function spawn( value ) {
 	let cmd = args.shift();
 	return new Bluebird( ( resolve, reject ) => {
 		let spawned = child_process.spawn( cmd, args, { stdio: 'inherit' } );
+		spawned.on( 'error', reject );
 		spawned.on( 'close', resolve );
 	} ).delay( 150 );
 }
+
 module.exports = spawn;
