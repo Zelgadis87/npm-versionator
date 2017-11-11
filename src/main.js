@@ -282,8 +282,10 @@ async function main() {
 		if ( FIXUP_COMMITS.length ) {
 			console.warn( `Found ${ FIXUP_COMMITS.length } fixup commits, which should be squashed before proceeding:`, `git rebase -i --autosquash ${ LAST_TAG }` );
 			console.line();
-			addTask( { message: 'Clean fixup commits', command: `git rebase -i --autosquash ${ LAST_TAG }`, interactive: 1, warning: 1 } );
+			addTask( { id: 'fixup', message: 'Clean fixup commits', command: `git rebase -i --autosquash ${ LAST_TAG }`, interactive: 1, warning: 1 } );
 		}
+	} else {
+		removeTask( 'fixup' );
 	}
 
 	REMOTE_REPOSITORIES = await git.getRemoteRepositories();
