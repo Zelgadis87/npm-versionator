@@ -31,6 +31,7 @@ let APP_VERSION,
 	PACKAGE_VERSION,
 	VERSION,
 	IS_PRERELEASE_VERSION,
+	IS_UNSTABLE,
 	UNTRACKED,
 	DIFF_COMMITS,
 	DIFF_MASTER_COMMITS,
@@ -42,10 +43,13 @@ let APP_VERSION,
 	MAJOR,
 	MINOR,
 	PATCH,
+	RELEASE_BRANCH,
+	RELEASE_TAG,
 	FIXUP_COMMITS,
 	REMOTE_REPOSITORIES,
 	ALLOW_RELEASE,
-	ALLOW_PRERELEASE
+	ALLOW_PRERELEASE,
+	VERSION_DONE
 	;
 
 let log = ( m, c, level = 'info' ) => {
@@ -309,10 +313,34 @@ function ask() {
 
 	let choices = [];
 
-	choices.push( choice( 'Create a new version', askReleaseType, { disabled: !ALLOW_RELEASE && !ALLOW_PRERELEASE } ) );
+	if ( !VERSION_DONE ) {
 
-	if ( DIFF_COMMITS > 0 )
-		choices.push( choice( `Show ${ DIFF_COMMITS } commits since ${ LAST_TAG }`, () => showGitLog( LAST_TAG, 'HEAD' ).then( ask ) ) );
+		choices.push( choice( 'Create a new version', () => startReleaseProcess().then( ask ), { disabled: !ALLOW_RELEASE && !ALLOW_PRERELEASE } ) );
+
+		if ( DIFF_COMMITS > 0 ) {
+			choices.push( choice( `Show ${ DIFF_COMMITS } commits since ${ LAST_TAG }`, () => showGitLog( LAST_TAG, 'HEAD' ).then( ask ) ) );
+			choices.push( choice( `Execute tests`, () => npmTest().then( ask ) ) );
+		}
+
+	} else {
+
+		if ( REMOTE_REPOSITORIES.length > 1 ) {
+			console.info( `To synchronize your changes to the configured Git repositories, use:` );
+			for ( let rep of REMOTE_REPOSITORIES ) {
+				console.info( `  for ${ rep }:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
+			}
+		} else if ( REMOTE_REPOSITORIES.length === 1 ) {
+			let rep = REMOTE_REPOSITORIES[ 0 ];
+			console.info( `To synchronize your changes to the ${ rep } Git repository, use:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
+		}
+
+		if ( IS_UNSTABLE ) {
+			console.info( `To publish your unstable changes to the npm repository, use:`, 'npm publish --tag=unstable' );
+		} else {
+			console.info( `To publish your changes to the npm repository, use:`, 'npm publish --tag=latest' );
+		}
+
+	}
 
 	choices.push( choice( `Exit`, () => process.exit( 0 ) ) );
 
@@ -323,6 +351,10 @@ function ask() {
 		choices: choices
 	} ).then( answers => answers.value() );
 
+}
+
+function startReleaseProcess() {
+	return askReleaseType();
 }
 
 function askReleaseType() {
@@ -506,7 +538,7 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 	let NEXT_VERSION = semver.inc( VERSION, versionType, versionIdentifier );
 
-	let IS_UNSTABLE = _.includes( [ SEMVER_PRE_PATCH, SEMVER_PRE_MINOR, SEMVER_PRE_MAJOR, SEMVER_PRE_RELEASE ], versionType );
+	IS_UNSTABLE = _.includes( [ SEMVER_PRE_PATCH, SEMVER_PRE_MINOR, SEMVER_PRE_MAJOR, SEMVER_PRE_RELEASE ], versionType );
 
 	let CHANGELOG = await askForChangelog( versionType, NEXT_VERSION );
 
@@ -560,8 +592,8 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 	console.line( true );
 
-	let RELEASE_BRANCH = `releases/${ NEXT_VERSION }`;
-	let RELEASE_TAG = `v${ NEXT_VERSION }`;
+	RELEASE_BRANCH = `releases/${ NEXT_VERSION }`;
+	RELEASE_TAG = `v${ NEXT_VERSION }`;
 
 	if ( CHANGELOG ) {
 		writeChangelogEntry( CHANGELOG );
@@ -626,21 +658,7 @@ async function versionate( versionType, versionIdentifier = '' ) {
 	console.info( `Versioning complete.` );
 	console.info( `Project updated to version: ${ NEXT_VERSION }.` );
 
-	if ( REMOTE_REPOSITORIES.length > 1 ) {
-		console.info( `To synchronize your changes to the configured Git repositories, use:` );
-		for ( let rep of REMOTE_REPOSITORIES ) {
-			console.info( `  for ${ rep }:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
-		}
-	} else if ( REMOTE_REPOSITORIES.length === 1 ) {
-		let rep = REMOTE_REPOSITORIES[ 0 ];
-		console.info( `To synchronize your changes to the ${ rep } Git repository, use:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
-	}
-
-	if ( IS_UNSTABLE ) {
-		console.info( `To publish your unstable changes to the npm repository, use:`, 'npm publish --tag=unstable' );
-	} else {
-		console.info( `To publish your changes to the npm repository, use:`, 'npm publish --tag=latest' );
-	}
+	VERSION_DONE = true;
 
 	return true;
 
