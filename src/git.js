@@ -78,7 +78,7 @@ git.log = async function( from, to = 'HEAD' ) {
 			};
 		} )
 		.map( log => {
-			log.fixup = log.message.trim().startsWith( 'fixup!' );
+			log.fixup = !!log.message.trim().match( /^(fixup!|squash!)/ );
 			return Bluebird.resolve( `git show --no-patch --format="%P" ${ log.id }` )
 				.then( execute )
 				.then( x => x.split( /\s+/ ) )
