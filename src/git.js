@@ -69,6 +69,7 @@ git.log = async function( from, to = 'HEAD' ) {
 	return Bluebird.resolve( `git log ${ from }..${ to } --oneline` )
 		.then( execute )
 		.then( text => text.split( '\n' ) )
+		.then( lines => lines.reverse() )
 		.map( line => {
 			let [ all, id, message ] = line.match( /^([a-z0-9]+)(.*)$/ );
 			return { id: id, message: message.trim() };
