@@ -344,11 +344,15 @@ function ask() {
 
 		for ( let task of TASKS ) {
 			console.task( task );
-			if ( !task.done )
-				choices.push( choice( task.message, () => announceAndExecuteAsync( task.command ).then( () => {
-					task.done = true;
-					return task.restart ? start() : ask();
-				} ) ) );
+			if ( !task.done ) {
+				choices.push( choice( task.message, () => {
+					return Bluebird.resolve( task.command )
+						.tap( console.line )
+						.then( announceAndExecuteAsync )
+						.tap( () => task.done = true )
+						.then( task.restart ? start : ask );
+				} ) );
+			}
 		}
 
 		console.line();
