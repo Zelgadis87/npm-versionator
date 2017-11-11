@@ -554,8 +554,10 @@ function getActionsRequiredToVersionate() {
 
 	if ( !EVERYTHING_COMMITTED ) {
 		// There are some files yet to be commited
-		addTask( { id: 'pending', message: 'Commit all pending edits', command: `git commit -a`, restart: 1, interactive: 1, warning: 1 } );
+		addTask( { id: 'commit-everything', message: 'Commit all pending edits', command: `git commit -a`, restart: 1, interactive: 1, warning: 1 } );
 		return [ 'Repository not clean, please commit all your files before creating a new version:', 'git commit -a' ];
+	} else {
+		removeTask( 'commit-everything' );
 	}
 
 	if ( BRANCH !== 'develop' )
@@ -725,8 +727,12 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 function addTask( task ) {
 	if ( task.id )
-		TASKS = TASKS.filter( t => t.id !== task.id );
+		removeTask( task.id );
 	TASKS.push( task );
+}
+
+function removeTask( id ) {
+	_.remove( TASKS, t => t.id === id );
 }
 
 module.exports = start;
