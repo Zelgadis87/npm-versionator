@@ -254,11 +254,13 @@ async function start() {
 
 	console.line();
 
-	let logs = await git.log( LAST_TAG, 'HEAD' );
-	FIXUP_COMMITS = logs.filter( l => l.message.startsWith( 'fixup!' ) );
-	if ( FIXUP_COMMITS.length ) {
-		console.error( `Found ${ FIXUP_COMMITS.length } fixup commits, which should be squashed before proceeding:`, `git rebase -i --autostash --autosquash ${ LAST_TAG }` );
-		console.line();
+	if ( EVERYTHING_COMMITTED ) {
+		let logs = await git.log( LAST_TAG, 'HEAD' );
+		FIXUP_COMMITS = logs.filter( l => l.message.startsWith( 'fixup!' ) );
+		if ( FIXUP_COMMITS.length ) {
+			console.warn( `Found ${ FIXUP_COMMITS.length } fixup commits, which should be squashed before proceeding:`, `git rebase -i --autosquash ${ LAST_TAG }` );
+			console.line();
+		}
 	}
 
 	REMOTE_REPOSITORIES = await git.getRemoteRepositories();
