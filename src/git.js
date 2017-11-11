@@ -71,8 +71,22 @@ git.log = async function( from, to = 'HEAD' ) {
 		.then( text => text.split( '\n' ) )
 		.then( lines => lines.reverse() )
 		.map( line => {
-			let [ all, id, message ] = line.match( /^([a-z0-9]+)(.*)$/ );
-			return { id: id, message: message.trim(), fixup: message.trim().startsWith( 'fixup!' ) };
+			let matches = line.match( /^([a-z0-9]+)(.*)$/ );
+			return {
+				id: matches[ 1 ],
+				message: matches[ 2 ].trim()
+			};
+		} )
+		.map( log => {
+			log.fixup = log.message.trim().startsWith( 'fixup!' );
+			return Bluebird.resolve( `git show --no-patch --format="%P" ${ log.id }` )
+				.then( execute )
+				.then( x => x.split( /\s+/ ) )
+				.then( parents => {
+					log.parents = parents;
+					log.merge = log.parents.length > 1;
+					return log;
+				} );
 		} );
 };
 
