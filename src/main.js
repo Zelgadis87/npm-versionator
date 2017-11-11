@@ -3,6 +3,7 @@ const Bluebird = extendBluebird( require( 'bluebird' ) )
 	, _ = require( 'lodash' )
 	, semver = require( 'semver' )
 	, process = require( 'process' )
+	, os = require( 'os' )
 	, fs = Bluebird.promisifyAll( require( 'fs' ) )
 	, moment = require( 'moment' )
 	, chalk = require( 'chalk' )
@@ -114,7 +115,7 @@ async function askForChangelog( versionType, versionNumber ) {
 			type: 'editor',
 			message: 'Please write the contents of the update',
 			when: ( answers ) => versionType === SEMVER_MAJOR || answers.change,
-			default: `## v${ versionNumber } (${ moment().format( 'YYYY/MM/DD HH:mm' ) })\n- Entry 1\n- Entry 2`
+			default: `## v${ versionNumber } (${ moment().format( 'YYYY/MM/DD HH:mm' ) })${ os.EOL }- Entry 1${ os.EOL }- Entry 2${ os.EOL }`
 		}
 	];
 
