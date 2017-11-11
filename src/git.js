@@ -65,8 +65,14 @@ git.getRemoteRepositories = async function() {
 	return execute( 'git remote' ).then( output => output.length > 0 ? output.split( '\n' ) : [] );
 };
 
-git.log = async function( from, to ) {
-	return execute( `git log ${from}..${to} --oneline` );
+git.log = async function( from, to = 'HEAD' ) {
+	return Bluebird.resolve( `git log ${ from }..${ to } --oneline` )
+		.then( execute )
+		.then( text => text.split( '\n' ) )
+		.map( line => {
+			let [ all, id, message ] = line.match( /^([a-z0-9]+)(.*)$/ );
+			return { id: id, message: message.trim() };
+		} );
 };
 
 module.exports = git;

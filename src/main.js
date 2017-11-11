@@ -419,11 +419,12 @@ function askPrereleaseIdentifier( prereleaseType ) {
 function showGitLog( from, to ) {
 
 	return Bluebird.resolve( git.log( from, to ) )
+		.map( log => `${ log.id } ${ log.message }` )
 		.tap( logs => {
 			console.splitLongLines = false;
 			console.indent( '>' );
 			console.println();
-			console.println( logs, chalk.yellow );
+			logs.forEach( m => console.println( m, chalk.yellow ) );
 			console.println();
 			console.outdent();
 			console.splitLongLines = true;
