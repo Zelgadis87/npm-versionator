@@ -294,15 +294,14 @@ async function start() {
 
 }
 
-let choice = ( n, v ) => { return { name: n, value: v }; };
+let choice = ( n, v, opts ) => { return _.extend( {}, opts, { name: n, value: v } ); };
 let semverFormat = ( name, type, identifier = '' ) => `${ name } ( ${ chalk.cyan.bold( semver.inc( VERSION, type, identifier ) ) } )`;
 
 function ask() {
 
 	let choices = [];
 
-	if ( ALLOW_RELEASE || ALLOW_PRERELEASE )
-		choices.push( choice( 'Create a new version', askReleaseType ) );
+	choices.push( choice( 'Create a new version', askReleaseType, { disabled: !ALLOW_RELEASE && !ALLOW_PRERELEASE } ) );
 
 	choices.push( choice( `Exit`, () => process.exit( 0 ) ) );
 
