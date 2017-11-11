@@ -182,6 +182,12 @@ async function start() {
 	APP_VERSION = await npm.getVersion();
 	console.title( _.pad( `Welcome to Version Generator v${ APP_VERSION }`, console.lineLength ) );
 
+	await main();
+
+}
+
+async function main() {
+
 	//
 	// ----------------------------------------------------
 	// Initial checks
@@ -360,7 +366,7 @@ function ask() {
 						.then( task.interactive ? announceAndSpawnAsync : announceAndExecuteAsync )
 						.tap( console.line )
 						.tap( () => task.done = true )
-						.then( task.restart ? start : ask );
+						.then( task.restart ? main : ask );
 				} ) );
 			}
 		}
