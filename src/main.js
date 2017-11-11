@@ -49,7 +49,9 @@ let APP_VERSION,
 	REMOTE_REPOSITORIES,
 	ALLOW_RELEASE,
 	ALLOW_PRERELEASE,
-	VERSION_DONE
+	VERSION_DONE,
+	NEXT_VERSION,
+	TASKS = []
 	;
 
 let log = ( m, c, level = 'info' ) => {
@@ -322,23 +324,21 @@ function ask() {
 			choices.push( choice( `Execute tests`, () => npmTest().then( ask ) ) );
 		}
 
-	} else {
+	}
 
-		if ( REMOTE_REPOSITORIES.length > 1 ) {
-			console.info( `To synchronize your changes to the configured Git repositories, use:` );
-			for ( let rep of REMOTE_REPOSITORIES ) {
-				console.info( `  for ${ rep }:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
-			}
-		} else if ( REMOTE_REPOSITORIES.length === 1 ) {
-			let rep = REMOTE_REPOSITORIES[ 0 ];
-			console.info( `To synchronize your changes to the ${ rep } Git repository, use:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
+	if ( TASKS.length ) {
+
+		console.line();
+		console.info( "Remaining tasks: " );
+		console.line();
+
+		for ( let task of TASKS ) {
+			console.task( task );
+			if ( !task.done )
+				choices.push( choice( task.message, () => announceAndExecuteAsync( task.command ).then( () => { task.done = true; return ask(); } ) ) );
 		}
 
-		if ( IS_UNSTABLE ) {
-			console.info( `To publish your unstable changes to the npm repository, use:`, 'npm publish --tag=unstable' );
-		} else {
-			console.info( `To publish your changes to the npm repository, use:`, 'npm publish --tag=latest' );
-		}
+		console.line();
 
 	}
 
@@ -356,6 +356,34 @@ function ask() {
 function startReleaseProcess() {
 	return askReleaseType();
 }
+
+function completeReleaseProcess() {
+
+	console.line();
+
+	console.info( `Versioning complete.` );
+	console.info( `Project updated to version: ${ NEXT_VERSION }.` );
+
+	VERSION_DONE = true;
+
+	if ( REMOTE_REPOSITORIES.length ) {
+		for ( let rep of REMOTE_REPOSITORIES ) {
+			TASKS.push( {
+				message: `Synchronize changes to the ${ rep } Git repository`,
+				command: `git push ${ rep } master develop ${ RELEASE_TAG }`
+			} );
+		}
+	}
+
+	TASKS.push( {
+		message: IS_UNSTABLE ? `Publish your unstable changes to the npm repository` : `Publish your changes to the npm repository`,
+		command: `npm publish --tag=${ IS_UNSTABLE ? 'unstable' : 'latest' }`
+	} );
+
+	return ask();
+
+}
+
 
 function askReleaseType() {
 
@@ -405,9 +433,6 @@ function askReleaseType() {
 			choices.push( versionChoice( 'M', `Release as major version`, SEMVER_MAJOR ) );
 		}
 	}
-
-	// TODO: Show the list of commits that would be added. Should be disabled by default.
-	// git log master..develop --oneline
 
 	return console.prompt( {
 		name: 'value',
@@ -536,7 +561,7 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 	console.line();
 
-	let NEXT_VERSION = semver.inc( VERSION, versionType, versionIdentifier );
+	NEXT_VERSION = semver.inc( VERSION, versionType, versionIdentifier );
 
 	IS_UNSTABLE = _.includes( [ SEMVER_PRE_PATCH, SEMVER_PRE_MINOR, SEMVER_PRE_MAJOR, SEMVER_PRE_RELEASE ], versionType );
 
@@ -653,12 +678,7 @@ async function versionate( versionType, versionIdentifier = '' ) {
 	//   to release the new version of its project.
 	//
 
-	console.line();
-
-	console.info( `Versioning complete.` );
-	console.info( `Project updated to version: ${ NEXT_VERSION }.` );
-
-	VERSION_DONE = true;
+	completeReleaseProcess();
 
 	return true;
 
