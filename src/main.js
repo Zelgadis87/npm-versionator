@@ -483,8 +483,17 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 	let CHANGELOG = await askForChangelog( versionType, NEXT_VERSION );
 
-	if ( CHANGELOG )
+	if ( CHANGELOG ) {
 		fs.writeFileSync( 'CHANGELOG.md.draft', CHANGELOG, 'UTF-8' );
+		CHANGELOG = _.chain( CHANGELOG )
+			.replace( /\r\n/g, '\n' )
+			.split( '\n' )
+			.map( _.trim )
+			.filter( Boolean )
+			.join( '\n' )
+			.trim()
+			.value();
+	}
 
 	//
 	// ----------------------------------------------------
