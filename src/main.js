@@ -375,6 +375,7 @@ function ask() {
 
 	}
 
+	choices.push( choice( 'Check again', main ) );
 	choices.push( choice( `Exit`, () => process.exit( 0 ) ) );
 
 	return console.prompt( {
