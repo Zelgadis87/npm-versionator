@@ -312,7 +312,7 @@ function ask() {
 	choices.push( choice( 'Create a new version', askReleaseType, { disabled: !ALLOW_RELEASE && !ALLOW_PRERELEASE } ) );
 
 	if ( DIFF_COMMITS > 0 )
-		choices.push( choice( `Show ${ DIFF_COMMITS } commits since ${ LAST_TAG }`, () => showGitLog( LAST_TAG, 'HEAD' ).tap( ask ) ) );
+		choices.push( choice( `Show ${ DIFF_COMMITS } commits since ${ LAST_TAG }`, () => showGitLog( LAST_TAG, 'HEAD' ).then( ask ) ) );
 
 	choices.push( choice( `Exit`, () => process.exit( 0 ) ) );
 
@@ -424,9 +424,10 @@ function askPrereleaseIdentifier( prereleaseType ) {
 		.then( answers => answers.value === option_back ? askPrereleaseType() : versionate( prereleaseType, answers.value ) );
 }
 
-function showGitLog( from, to ) {
+async function showGitLog( from, to ) {
 
-	return Bluebird.resolve( git.log( from, to ) )
+	return Bluebird.resolve( [ from, to ] )
+		.spread( git.log )
 		.map( log => `${ log.id } ${ log.message }` )
 		.tap( logs => {
 			console.splitLongLines = false;
