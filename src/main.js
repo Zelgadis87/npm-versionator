@@ -12,6 +12,7 @@ const Bluebird = extendBluebird( require( 'bluebird' ) )
 	, npm = require( './npm.js' )
 	, git = require( './git.js' )
 	, execute = require( './execute.js' )
+	, spawn = require( './spawn.js' )
 	, ProcedureError = require( './utils.js' ).ProcedureError
 	;
 
@@ -106,6 +107,15 @@ function announceAndExecuteAsync( cmd ) {
 		.resolve( cmd )
 		.tap( console.command )
 		.then( execute );
+}
+
+function announceAndSpawnAsync( cmd ) {
+	return Bluebird
+		.resolve( cmd )
+		.tap( console.command )
+		.tap( console.line )
+		.tap( console.line )
+		.then( spawn );
 }
 
 async function askForChangelog( versionType, versionNumber ) {
@@ -348,7 +358,8 @@ function ask() {
 				choices.push( choice( task.message, () => {
 					return Bluebird.resolve( task.command )
 						.tap( console.line )
-						.then( announceAndExecuteAsync )
+						.then( task.interactive ? announceAndSpawnAsync : announceAndExecuteAsync )
+						.tap( console.line )
 						.tap( () => task.done = true )
 						.then( task.restart ? start : ask );
 				} ) );
@@ -387,7 +398,8 @@ function completeReleaseProcess() {
 		for ( let rep of REMOTE_REPOSITORIES ) {
 			TASKS.push( {
 				message: `Synchronize changes to the ${ rep } Git repository`,
-				command: `git push ${ rep } master develop ${ RELEASE_TAG }`
+				command: `git push ${ rep } master develop ${ RELEASE_TAG }`,
+				interactive: 1
 			} );
 		}
 	}
