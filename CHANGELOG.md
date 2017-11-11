@@ -1,4 +1,8 @@
 
+## v0.6.2 (2017/11/11 14:09)
+- Fix: Changelog entry correctly considers user OS EOL character when asking for an entry
+- Fix: Changelog entry is correctly saved on disk using LF as the EOL character
+
 ## v0.6.1 (2017/11/07 21:38)
 - Fix: Added delay in command execution to try to prevent a possible issue with Git file handling
 
