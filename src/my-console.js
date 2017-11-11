@@ -21,7 +21,7 @@ console.task = ( t ) => {
 	console.splitLongLines = false;
 	console.indent( t.done ? '✓' : '✗' );
 	console.print( t.message, t.done ? chalk.green : chalk.yellow );
-	if ( t.command ) {
+	if ( t.command && !t.done ) {
 		console.print( ' ' );
 		command( ' ' + t.command );
 	}
