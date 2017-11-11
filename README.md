@@ -25,7 +25,7 @@ In particular:
 - It will enforce that a new version of a package has to start from the *develop* branch and with a clean repository.
 - It will check that all configured NPM tests are passing.
 - A request for an entry to the CHANGELOG.md file is asked on every version and is timestamped automatically.
-- Once a version is created, by specification, it cannot (or at least, not easily) be undone.
+- Once a version is created, by specification, it cannot be undone.
 - The preferred way to create a new public stable version of the package is to go from alpha releases, to beta releases, to release candidates. This is not forced but it is encouraged thorough the tool.
 - Version numbers cannot be decreased, and it is not possible to go back to an alpha prerelease from a beta prerelease, or to a beta release from a release candidate.
 - If the developer decides to use release candidates, no commit can be done between the latest RC and the final version, to ensure that no last minute bug is introduced in the system.
@@ -35,7 +35,7 @@ In particular:
 # What does it do?
 At the most fundamental level, whenever the user decides to (pre)release a new version of its software, this tool will take the existing work on the *develop* branch and use it to tag a new version on the Git repository and on the NPM package.json file. The developer is guided thorough the processm by first ensuring that the new version is valid and then by giving instructions on how to proceed to release the newly created version.
 
-When creating a release, all development made to *develop* is merged on a new release branch, named after the new version number. On this branch, the CHANGELOG.md file is updated with the new features and fixes that are getting released and the NPM package is increased. The work is finally merged to *master*, where it is tagged, and it is merged back on *develop*. Commands to push the changes and publish the package are emitted for the developer convenience. Nothing is ever pushed automatically by the tool.
+When creating a release, all development made to *develop* is merged on a new release branch, named after the new version number. On this branch, the CHANGELOG.md file is updated with the new features and fixes that are getting released and the NPM package is increased. This branch is tagged with the new version tag. The work is finally merged to *master* and back to *develop*. Commands to push the changes and publish the package are emitted for the developer convenience. Nothing is ever pushed automatically by the tool.
 
 When creating a pre-release version, the work gets tagged directly on the *develop* branch and instructions are given to the developer on how to publish its unstable package, without breaking existing dependants libraries.
 

@@ -678,18 +678,16 @@ async function versionate( versionType, versionIdentifier = '' ) {
 		await announceAndExecuteAsync( `git add package-lock.json` );
 
 	await announceAndExecuteAsync( `git commit -m "${ NEXT_VERSION }"` );
+	await announceAndExecuteAsync( `git tag ${ RELEASE_TAG }` );
 
 	if ( !IS_UNSTABLE ) {
 		await announceAndExecuteAsync( `git checkout master` );
 		await announceAndExecuteAsync( `git merge --no-ff ${ RELEASE_BRANCH }` );
-		await announceAndExecuteAsync( `git tag ${ RELEASE_TAG }` );
 
 		await announceAndExecuteAsync( `git checkout develop` );
-		await announceAndExecuteAsync( `git merge --no-ff ${ RELEASE_BRANCH }` );
+		await announceAndExecuteAsync( `git merge --ff-only ${ RELEASE_BRANCH }` );
 
 		await announceAndExecuteAsync( `git branch -d ${ RELEASE_BRANCH }` );
-	} else {
-		await announceAndExecuteAsync( `git tag ${ RELEASE_TAG }` );
 	}
 
 	//
