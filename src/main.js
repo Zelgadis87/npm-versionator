@@ -456,12 +456,12 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 	console.info( 'Testing NPM package: ', 'npm test -- --color' );
 	console.indent();
-	console.lineLength *= 13;
+	console.splitLongLines = false;
 
 	await npm.test( console.info, console.error )
 		.then( () => console.outdent().info( 'All tests passed.\n\n' ), ex => { console.outdent(); throw new ProcedureError( 'Tests failed.', null, ex ); } );
 
-	console.lineLength /= 13;
+	console.splitLongLines = true;
 
 	//
 	// ----------------------------------------------------
