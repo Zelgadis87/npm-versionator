@@ -441,6 +441,17 @@ async function showGitLog( from, to ) {
 
 }
 
+async function npmTest() {
+	console.info( 'Testing NPM package: ', 'npm test -- --color' );
+	console.indent();
+	console.splitLongLines = false;
+
+	await npm.test( console.info, console.error )
+		.then( () => console.outdent().info( 'All tests passed.\n\n' ), ex => { console.outdent(); throw new ProcedureError( 'Tests failed.', null, ex ); } );
+
+	console.splitLongLines = true;
+}
+
 function getActionsRequiredToVersionate() {
 
 	if ( !semver.valid( PACKAGE_VERSION ) )
@@ -479,14 +490,7 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 	console.line( true );
 
-	console.info( 'Testing NPM package: ', 'npm test -- --color' );
-	console.indent();
-	console.splitLongLines = false;
-
-	await npm.test( console.info, console.error )
-		.then( () => console.outdent().info( 'All tests passed.\n\n' ), ex => { console.outdent(); throw new ProcedureError( 'Tests failed.', null, ex ); } );
-
-	console.splitLongLines = true;
+	await npmTest();
 
 	//
 	// ----------------------------------------------------
