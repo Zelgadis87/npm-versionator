@@ -424,7 +424,7 @@ function getActionsRequiredToVersionate() {
 
 	if ( !EVERYTHING_COMMITTED )
 		// There are some files yet to be commited
-		return [ 'Repository not clean, please commit all your files before proceeding:', 'git commit -a' ];
+		return [ 'Repository not clean, please commit all your files before creating a new version:', 'git commit -a' ];
 
 	if ( BRANCH !== 'develop' )
 		// We are on an invalid branch
