@@ -110,6 +110,12 @@ function announceAndExecuteAsync( cmd ) {
 
 async function askForChangelog( versionType, versionNumber ) {
 
+	console.line();
+	console.info( 'Here are the commits for this release:' );
+	console.line();
+	await showGitLog( LAST_TAG, 'HEAD' );
+	console.line();
+
 	let questions = [
 		{
 			name: 'change',
