@@ -304,11 +304,10 @@ function ask() {
 	if ( ALLOW_RELEASE || ALLOW_PRERELEASE )
 		choices.push( choice( 'Create a new version', askReleaseType ) );
 
+	choices.push( choice( `Exit`, () => process.exit( 0 ) ) );
+
 	// TODO: Show the list of commits that would be added. Should be disabled by default.
 	// git log master..develop --oneline
-
-	if ( choices.length === 0 )
-		process.exit( 0 );
 
 	return console.prompt( {
 		name: 'value',
