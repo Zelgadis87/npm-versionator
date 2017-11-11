@@ -1,6 +1,8 @@
 
-## v0.6.0 (2017/11/07 21:20)
+## v0.6.1 (2017/11/07 21:38)
+- Fix: Added delay in command execution to try to prevent a possible issue with Git file handling
 
+## v0.6.0 (2017/11/07 21:20)
 - Created infrastructure for a more interactive user experience
 - Fixed package-lock.json handling
 
