@@ -365,8 +365,13 @@ function ask() {
 						.tap( console.line )
 						.then( task.interactive ? announceAndSpawnAsync : announceAndExecuteAsync )
 						.tap( console.line )
-						.tap( () => task.done = true )
-						.then( task.restart ? main : ask );
+						.then( () => {
+							task.done = true;
+							return task.restart ? main() : ask();
+						}, e => {
+							console.error( e.message );
+							return ask();
+						} );
 				} ) );
 			}
 		}
