@@ -282,7 +282,7 @@ async function main() {
 		if ( FIXUP_COMMITS.length ) {
 			console.warn( `Found ${ FIXUP_COMMITS.length } fixup commits, which should be squashed before proceeding:`, `git rebase -i --autosquash ${ LAST_TAG }` );
 			console.line();
-			TASKS.push( { message: 'Clean fixup commits', command: `git rebase -i --autosquash ${ LAST_TAG }`, interactive: 1, warning: 1 } );
+			addTask( { message: 'Clean fixup commits', command: `git rebase -i --autosquash ${ LAST_TAG }`, interactive: 1, warning: 1 } );
 		}
 	}
 
@@ -402,7 +402,7 @@ function completeReleaseProcess() {
 
 	if ( REMOTE_REPOSITORIES.length ) {
 		for ( let rep of REMOTE_REPOSITORIES ) {
-			TASKS.push( {
+			addTask( {
 				message: `Synchronize changes to the ${ rep } Git repository`,
 				command: `git push ${ rep } master develop ${ RELEASE_TAG }`,
 				interactive: 1
@@ -410,7 +410,7 @@ function completeReleaseProcess() {
 		}
 	}
 
-	TASKS.push( {
+	addTask( {
 		message: IS_UNSTABLE ? `Publish your unstable changes to the npm repository` : `Publish your changes to the npm repository`,
 		command: `npm publish --tag=${ IS_UNSTABLE ? 'unstable' : 'latest' }`
 	} );
@@ -554,7 +554,7 @@ function getActionsRequiredToVersionate() {
 
 	if ( !EVERYTHING_COMMITTED ) {
 		// There are some files yet to be commited
-		TASKS.push( { message: 'Commit all pending edits', command: `git commit -a`, restart: 1, interactive: 1, warning: 1 } );
+		addTask( { id: 'pending', message: 'Commit all pending edits', command: `git commit -a`, restart: 1, interactive: 1, warning: 1 } );
 		return [ 'Repository not clean, please commit all your files before creating a new version:', 'git commit -a' ];
 	}
 
@@ -721,6 +721,12 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 	return true;
 
+}
+
+function addTask( task ) {
+	if ( task.id )
+		TASKS = TASKS.filter( t => t.id !== task.id );
+	TASKS.push( task );
 }
 
 module.exports = start;
