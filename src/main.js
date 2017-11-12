@@ -330,6 +330,8 @@ function ask() {
 			choices.push( choice( `Execute tests`, () => npmTest().catch( e => console.error( 'Tests failed' ) ).then( ask ) ) );
 		}
 
+		choices.push( choice( 'Check again', main ) );
+
 	}
 
 	if ( TASKS.length ) {
@@ -361,7 +363,6 @@ function ask() {
 
 	}
 
-	choices.push( choice( 'Check again', main ) );
 	choices.push( choice( `Exit`, () => process.exit( 0 ) ) );
 
 	return console.prompt( {
