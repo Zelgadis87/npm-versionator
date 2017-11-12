@@ -190,33 +190,4 @@ describe( 'console', function() {
 
 	} );
 
-	describe( 'Prompting', function() {
-
-		it( 'Should introduce a new line before prompting', function() {
-			console.println( 'a' );
-			let promise = Bluebird
-				.resolve( console.prompt( { name: 'test', message: 'test 1', type: 'input' } ) )
-				.tap( () => {
-					expect( testStream.output ).to.be.equal( '  a\n' );
-				} ).tap( () => {
-					console.prompt( { name: 'test', message: 'test 2', type: 'input' } );
-				} ).tap( () => {
-					expect( testStream.output ).to.be.equal( '  a\n' );
-				} );
-			process.stdin.push( 'x\n' );
-			process.stdin.push( 'x\n' );
-			return promise;
-		} );
-
-		it( 'Should read input from the standard input', function() {
-			let promise = console.prompt( { name: 'test', message: 'test', type: 'input' } ).then( answers => {
-				expect( answers.test ).to.be.equal( 'x' );
-			} );
-			process.stdin.push( 'x\n' );
-			return promise;
-		} );
-
-
-	} );
-
 } );
