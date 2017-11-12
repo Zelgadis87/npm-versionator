@@ -327,8 +327,13 @@ function ask() {
 
 		if ( DIFF_COMMITS > 0 ) {
 			choices.push( choice( `Show ${ DIFF_COMMITS } commits since ${ LAST_TAG }`, () => showGitLog( LAST_TAG, 'HEAD' ).then( ask ) ) );
-			choices.push( choice( `Execute tests`, () => npmTest().catch( e => console.error( 'Tests failed' ) ).then( ask ) ) );
 		}
+
+		if ( DIFF_MASTER_COMMITS > 0 && DIFF_MASTER_COMMITS !== DIFF_COMMITS ) {
+			choices.push( choice( `Show ${ DIFF_MASTER_COMMITS } commits since last stable release`, () => showGitLog( 'master', 'HEAD' ).then( ask ) ) );
+		}
+
+		choices.push( choice( `Execute tests`, () => npmTest().catch( e => console.error( 'Tests failed' ) ).then( ask ) ) );
 
 		choices.push( choice( 'Check again', main ) );
 
