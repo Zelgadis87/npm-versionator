@@ -70,11 +70,13 @@ git.log = async function( from, to = 'HEAD' ) {
 		.then( execute )
 		.then( text => text.split( '\n' ) )
 		.then( lines => lines.reverse() )
+		.filter( Boolean )
+		.map( line => line.trim() )
 		.map( line => {
 			let matches = line.match( /^([a-z0-9]+)(.*)$/ );
 			return {
 				id: matches[ 1 ],
-				message: matches[ 2 ].trim()
+				message: matches[ 2 ]
 			};
 		} )
 		.map( log => {
