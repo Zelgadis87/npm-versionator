@@ -17,4 +17,17 @@ console.error = ( m, c ) => error( m ) & iff( c, () => command( ' ' + c ), _.noo
 console.command = ( c ) => command( c ) & console.line();
 console.title = ( m ) => { let hr = _.repeat( '-', m.length ); info( hr + '\n' + m + '\n' + hr + '\n' ); };
 
+console.task = ( t ) => {
+	console.splitLongLines = false;
+	console.indent( t.done ? '✓' : '✗' );
+	console.print( t.message, t.done ? chalk.green : chalk.yellow );
+	if ( t.command && !t.done ) {
+		console.print( ' ' );
+		command( ' ' + t.command );
+	}
+	console.line();
+	console.outdent();
+	console.splitLongLines = true;
+};
+
 module.exports = console;

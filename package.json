@@ -1,6 +1,6 @@
 {
   "name": "@zelgadis87/npm-versionator",
-  "version": "0.6.2",
+  "version": "1.0.0",
   "description": "An opinionated CLI tool to help versioning your NPM package",
   "keywords": [
     "NPM",
@@ -13,7 +13,8 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "npm run eslint && npm run mocha",
+    "pretest": "npm run eslint",
+    "test": "npm run mocha",
     "mocha": "mocha src/**/*.spec.js",
     "eslint": "eslint -c .eslintrc src/**/*.js",
     "coverage": "nyc npm test",
@@ -33,6 +34,7 @@
     "lodash": "^4.17.4",
     "moment": "^2.18.1",
     "semver": "^5.3.0",
+    "supports-color": "^5.0.0",
     "yargs": "^7.1.0"
   },
   "repository": {

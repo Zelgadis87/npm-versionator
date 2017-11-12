@@ -65,4 +65,31 @@ git.getRemoteRepositories = async function() {
 	return execute( 'git remote' ).then( output => output.length > 0 ? output.split( '\n' ) : [] );
 };
 
+git.log = async function( from, to = 'HEAD' ) {
+	return Bluebird.resolve( `git log ${ from }..${ to } --oneline` )
+		.then( execute )
+		.then( text => text.split( '\n' ) )
+		.then( lines => lines.reverse() )
+		.filter( Boolean )
+		.map( line => line.trim() )
+		.map( line => {
+			let matches = line.match( /^([a-z0-9]+)(.*)$/ );
+			return {
+				id: matches[ 1 ],
+				message: matches[ 2 ]
+			};
+		} )
+		.map( log => {
+			log.fixup = !!log.message.trim().match( /^(fixup!|squash!)/ );
+			return Bluebird.resolve( `git show --no-patch --format="%P" ${ log.id }` )
+				.then( execute )
+				.then( x => x.split( /\s+/ ) )
+				.then( parents => {
+					log.parents = parents;
+					log.merge = log.parents.length > 1;
+					return log;
+				} );
+		} );
+};
+
 module.exports = git;

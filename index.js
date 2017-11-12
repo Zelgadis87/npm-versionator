@@ -17,7 +17,7 @@ Bluebird
 	.try( activate )
 	.then( () => process.exit( 0 ) )
 	.catch( ( err ) => {
-		console.lineLength = 9999;
+		console.splitLongLines = false;
 		console.line( true );
 		if ( err instanceof ProcedureError ) {
 			console.error( err.message, err.command );

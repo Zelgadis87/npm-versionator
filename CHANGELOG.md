@@ -1,4 +1,15 @@
 
+## v1.0.0 (2017/11/12 03:47)
+- Breaking: Release tag is now made on the release branch instead of master
+- Added: Allow the user to see the commits log before starting a release
+- Added: Allow the user to test its package before starting a release
+- Added: Detect and warn the user in case any fixup commits is found in the log
+- Added: Allow the user to handle post-version tasks directly inside the tool, like pushing and publishing
+- Added: Show commit logs before asking for a changelog entry
+- Added: Allow the user to commit all pending changes, if the repository is not clean
+- Added: Allow the user to rebase its commits, if the repository still contains fixup commits
+- Improved: Test output is now colored accordingly to the shell capabilities
+
 ## v0.6.2 (2017/11/11 14:09)
 - Fix: Changelog entry correctly considers user OS EOL character when asking for an entry
 - Fix: Changelog entry is correctly saved on disk using LF as the EOL character

@@ -12,6 +12,7 @@ const Bluebird = extendBluebird( require( 'bluebird' ) )
 	, npm = require( './npm.js' )
 	, git = require( './git.js' )
 	, execute = require( './execute.js' )
+	, spawn = require( './spawn.js' )
 	, ProcedureError = require( './utils.js' ).ProcedureError
 	;
 
@@ -31,6 +32,7 @@ let APP_VERSION,
 	PACKAGE_VERSION,
 	VERSION,
 	IS_PRERELEASE_VERSION,
+	IS_UNSTABLE,
 	UNTRACKED,
 	DIFF_COMMITS,
 	DIFF_MASTER_COMMITS,
@@ -42,9 +44,15 @@ let APP_VERSION,
 	MAJOR,
 	MINOR,
 	PATCH,
+	RELEASE_BRANCH,
+	RELEASE_TAG,
+	FIXUP_COMMITS,
 	REMOTE_REPOSITORIES,
 	ALLOW_RELEASE,
-	ALLOW_PRERELEASE
+	ALLOW_PRERELEASE,
+	VERSION_DONE,
+	NEXT_VERSION,
+	TASKS = []
 	;
 
 let log = ( m, c, level = 'info' ) => {
@@ -58,27 +66,6 @@ let log = ( m, c, level = 'info' ) => {
 		c = _.repeat( ' ', diff ) + c;
 	return doLog( m, c );
 };
-
-function extendInquirer( inquirer ) {
-
-	// Use VIM as default editor if no value is specified.
-	process.env.EDITOR = process.env.EDITOR || 'vim';
-
-	// Create a logger Writable stream
-	// let Writable = require( 'stream' ).Writable;
-	// let writableLogger = new Writable();
-	// writableLogger._write = ( chunk, encoding, done ) => { logger.info( chunk.toString() ); done(); };
-
-	// // Replace default inquirer prompt with a new one
-	let _prompt = inquirer.createPromptModule();
-	inquirer.prompt = ( args ) => {
-		console.print( '\n' );
-		return _prompt( args ).then( ( data ) => { console.print( '' ); return data; } );
-	};
-
-	return inquirer;
-
-}
 
 function extendBluebird( Bluebird ) {
 	Bluebird.config( {
@@ -101,7 +88,22 @@ function announceAndExecuteAsync( cmd ) {
 		.then( execute );
 }
 
+function announceAndSpawnAsync( cmd ) {
+	return Bluebird
+		.resolve( cmd )
+		.tap( console.command )
+		.tap( console.line )
+		.tap( console.line )
+		.then( spawn );
+}
+
 async function askForChangelog( versionType, versionNumber ) {
+
+	console.line();
+	console.info( 'Here are the commits for this release:' );
+	console.line();
+	await showGitLog( LAST_TAG, 'HEAD' );
+	console.line();
 
 	let questions = [
 		{
@@ -158,6 +160,12 @@ async function start() {
 
 	APP_VERSION = await npm.getVersion();
 	console.title( _.pad( `Welcome to Version Generator v${ APP_VERSION }`, console.lineLength ) );
+
+	await main();
+
+}
+
+async function main() {
 
 	//
 	// ----------------------------------------------------
@@ -247,6 +255,18 @@ async function start() {
 
 	console.line();
 
+	if ( EVERYTHING_COMMITTED ) {
+		let logs = await git.log( LAST_TAG, 'HEAD' );
+		FIXUP_COMMITS = logs.filter( l => l.fixup );
+		if ( FIXUP_COMMITS.length ) {
+			console.warn( `Found ${ FIXUP_COMMITS.length } fixup commits, which should be squashed before proceeding:`, `git rebase -i --autosquash ${ LAST_TAG }` );
+			console.line();
+			addTask( { id: 'fixup', message: 'Clean fixup commits', command: `git rebase -i --autosquash ${ LAST_TAG }`, interactive: 1, warning: 1 } );
+		}
+	} else {
+		removeTask( 'fixup' );
+	}
+
 	REMOTE_REPOSITORIES = await git.getRemoteRepositories();
 	if ( REMOTE_REPOSITORIES.length === 0 ) {
 		console.warn( 'No remote repository found.' );
@@ -294,21 +314,61 @@ async function start() {
 
 }
 
-let choice = ( n, v ) => { return { name: n, value: v }; };
+let choice = ( n, v, opts ) => { return _.extend( {}, opts, { name: n, value: v } ); };
 let semverFormat = ( name, type, identifier = '' ) => `${ name } ( ${ chalk.cyan.bold( semver.inc( VERSION, type, identifier ) ) } )`;
 
 function ask() {
 
 	let choices = [];
 
-	if ( ALLOW_RELEASE || ALLOW_PRERELEASE )
-		choices.push( choice( 'Create a new version', askReleaseType ) );
+	if ( !VERSION_DONE ) {
 
-	// TODO: Show the list of commits that would be added. Should be disabled by default.
-	// git log master..develop --oneline
+		choices.push( choice( 'Create a new version', () => startReleaseProcess().then( ask ), { disabled: !ALLOW_RELEASE && !ALLOW_PRERELEASE } ) );
 
-	if ( choices.length === 0 )
-		process.exit( 0 );
+		if ( DIFF_COMMITS > 0 ) {
+			choices.push( choice( `Show ${ DIFF_COMMITS } commits since ${ LAST_TAG }`, () => showGitLog( LAST_TAG, 'HEAD' ).then( ask ) ) );
+		}
+
+		if ( DIFF_MASTER_COMMITS > 0 && DIFF_MASTER_COMMITS !== DIFF_COMMITS ) {
+			choices.push( choice( `Show ${ DIFF_MASTER_COMMITS } commits since last stable release`, () => showGitLog( 'master', 'HEAD' ).then( ask ) ) );
+		}
+
+		choices.push( choice( `Execute tests`, () => npmTest().catch( e => console.error( 'Tests failed' ) ).then( ask ) ) );
+
+		choices.push( choice( 'Check again', main ) );
+
+	}
+
+	if ( TASKS.length ) {
+
+		console.line();
+		console.info( "Remaining tasks: " );
+		console.line();
+
+		for ( let task of TASKS ) {
+			console.task( task );
+			if ( !task.done ) {
+				choices.push( choice( task.message, () => {
+					return Bluebird.resolve( task.command )
+						.tap( console.line )
+						.then( task.interactive ? announceAndSpawnAsync : announceAndExecuteAsync )
+						.tap( console.line )
+						.then( () => {
+							task.done = true;
+							return task.restart ? main() : ask();
+						}, e => {
+							console.error( e.message );
+							return ask();
+						} );
+				} ) );
+			}
+		}
+
+		console.line();
+
+	}
+
+	choices.push( choice( `Exit`, () => process.exit( 0 ) ) );
 
 	return console.prompt( {
 		name: 'value',
@@ -318,6 +378,37 @@ function ask() {
 	} ).then( answers => answers.value() );
 
 }
+
+function startReleaseProcess() {
+	return askReleaseType();
+}
+
+function completeReleaseProcess() {
+
+	console.line();
+
+	console.info( `Versioning complete.` );
+	console.info( `Project updated to version: ${ NEXT_VERSION }.` );
+
+	VERSION_DONE = true;
+
+	if ( REMOTE_REPOSITORIES.length ) {
+		for ( let rep of REMOTE_REPOSITORIES ) {
+			addTask( {
+				message: `Synchronize changes to the ${ rep } Git repository`,
+				command: `git push ${ rep } master develop ${ RELEASE_TAG }`,
+				interactive: 1
+			} );
+		}
+	}
+
+	addTask( {
+		message: IS_UNSTABLE ? `Publish your unstable changes to the npm repository` : `Publish your changes to the npm repository`,
+		command: `npm publish --tag=${ IS_UNSTABLE ? 'unstable' : 'latest' }`
+	} );
+
+}
+
 
 function askReleaseType() {
 
@@ -368,9 +459,6 @@ function askReleaseType() {
 		}
 	}
 
-	// TODO: Show the list of commits that would be added. Should be disabled by default.
-	// git log master..develop --oneline
-
 	return console.prompt( {
 		name: 'value',
 		type: 'list',
@@ -418,15 +506,49 @@ function askPrereleaseIdentifier( prereleaseType ) {
 		.then( answers => answers.value === option_back ? askPrereleaseType() : versionate( prereleaseType, answers.value ) );
 }
 
+async function showGitLog( from, to ) {
+
+	return Bluebird.resolve( [ from, to ] )
+		.spread( git.log )
+		.map( log => `${ chalk[ log.fixup ? 'red' : 'yellow' ]( log.id ) } ${ chalk[ log.fixup ? 'red' : 'white' ]( log.message ) }` )
+		.tap( logs => {
+			console.splitLongLines = false;
+			console.indent( '>' );
+			console.println();
+			logs.forEach( m => console.println( m ) );
+			console.println();
+			console.outdent();
+			console.splitLongLines = true;
+		} );
+
+}
+
+async function npmTest() {
+
+	console.line();
+	console.info( 'Testing NPM package: ', 'npm test' );
+	console.indent();
+	console.splitLongLines = false;
+
+	await npm.test( console.print, console.error )
+		.then( () => console.outdent().info( 'All tests passed.\n\n' ), ex => { console.outdent(); throw new ProcedureError( 'Tests failed.', null, ex ); } );
+
+	console.splitLongLines = true;
+}
+
 function getActionsRequiredToVersionate() {
 
 	if ( !semver.valid( PACKAGE_VERSION ) )
 		// Not a SemVer package
 		return [ 'Package is in an invalid version according to SemVer.' ];
 
-	if ( !EVERYTHING_COMMITTED )
+	if ( !EVERYTHING_COMMITTED ) {
 		// There are some files yet to be commited
-		return [ 'Repository not clean, please commit all your files before proceeding:', 'git commit -a' ];
+		addTask( { id: 'commit-everything', message: 'Commit all pending edits', command: `git commit -a`, restart: 1, interactive: 1, warning: 1 } );
+		return [ 'Repository not clean, please commit all your files before creating a new version:', 'git commit -a' ];
+	} else {
+		removeTask( 'commit-everything' );
+	}
 
 	if ( BRANCH !== 'develop' )
 		// We are on an invalid branch
@@ -456,14 +578,7 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 	console.line( true );
 
-	console.info( 'Testing NPM package: ', 'npm test -- --color' );
-	console.indent();
-	console.lineLength *= 13;
-
-	await npm.test( console.info, console.error )
-		.then( () => console.outdent().info( 'All tests passed.\n\n' ), ex => { console.outdent(); throw new ProcedureError( 'Tests failed.', null, ex ); } );
-
-	console.lineLength /= 13;
+	await npmTest();
 
 	//
 	// ----------------------------------------------------
@@ -477,9 +592,9 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 	console.line();
 
-	let NEXT_VERSION = semver.inc( VERSION, versionType, versionIdentifier );
+	NEXT_VERSION = semver.inc( VERSION, versionType, versionIdentifier );
 
-	let IS_UNSTABLE = _.includes( [ SEMVER_PRE_PATCH, SEMVER_PRE_MINOR, SEMVER_PRE_MAJOR, SEMVER_PRE_RELEASE ], versionType );
+	IS_UNSTABLE = _.includes( [ SEMVER_PRE_PATCH, SEMVER_PRE_MINOR, SEMVER_PRE_MAJOR, SEMVER_PRE_RELEASE ], versionType );
 
 	let CHANGELOG = await askForChangelog( versionType, NEXT_VERSION );
 
@@ -533,8 +648,8 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 	console.line( true );
 
-	let RELEASE_BRANCH = `releases/${ NEXT_VERSION }`;
-	let RELEASE_TAG = `v${ NEXT_VERSION }`;
+	RELEASE_BRANCH = `releases/${ NEXT_VERSION }`;
+	RELEASE_TAG = `v${ NEXT_VERSION }`;
 
 	if ( CHANGELOG ) {
 		writeChangelogEntry( CHANGELOG );
@@ -569,18 +684,16 @@ async function versionate( versionType, versionIdentifier = '' ) {
 		await announceAndExecuteAsync( `git add package-lock.json` );
 
 	await announceAndExecuteAsync( `git commit -m "${ NEXT_VERSION }"` );
+	await announceAndExecuteAsync( `git tag ${ RELEASE_TAG }` );
 
 	if ( !IS_UNSTABLE ) {
 		await announceAndExecuteAsync( `git checkout master` );
 		await announceAndExecuteAsync( `git merge --no-ff ${ RELEASE_BRANCH }` );
-		await announceAndExecuteAsync( `git tag ${ RELEASE_TAG }` );
 
 		await announceAndExecuteAsync( `git checkout develop` );
-		await announceAndExecuteAsync( `git merge --no-ff ${ RELEASE_BRANCH }` );
+		await announceAndExecuteAsync( `git merge --ff-only ${ RELEASE_BRANCH }` );
 
 		await announceAndExecuteAsync( `git branch -d ${ RELEASE_BRANCH }` );
-	} else {
-		await announceAndExecuteAsync( `git tag ${ RELEASE_TAG }` );
 	}
 
 	//
@@ -594,29 +707,20 @@ async function versionate( versionType, versionIdentifier = '' ) {
 	//   to release the new version of its project.
 	//
 
-	console.line();
-
-	console.info( `Versioning complete.` );
-	console.info( `Project updated to version: ${ NEXT_VERSION }.` );
-
-	if ( REMOTE_REPOSITORIES.length > 1 ) {
-		console.info( `To synchronize your changes to the configured Git repositories, use:` );
-		for ( let rep of REMOTE_REPOSITORIES ) {
-			console.info( `  for ${ rep }:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
-		}
-	} else if ( REMOTE_REPOSITORIES.length === 1 ) {
-		let rep = REMOTE_REPOSITORIES[ 0 ];
-		console.info( `To synchronize your changes to the ${ rep } Git repository, use:`, `git push ${ rep } master develop ${ RELEASE_TAG }` );
-	}
-
-	if ( IS_UNSTABLE ) {
-		console.info( `To publish your unstable changes to the npm repository, use:`, 'npm publish --tag=unstable' );
-	} else {
-		console.info( `To publish your changes to the npm repository, use:`, 'npm publish --tag=latest' );
-	}
+	completeReleaseProcess();
 
 	return true;
 
+}
+
+function addTask( task ) {
+	if ( task.id )
+		removeTask( task.id );
+	TASKS.push( task );
+}
+
+function removeTask( id ) {
+	_.remove( TASKS, t => t.id === id );
 }
 
 module.exports = start;

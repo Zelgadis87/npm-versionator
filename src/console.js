@@ -18,12 +18,14 @@ function Console( lineLength = LINE_LENGTH, outputStream = process.stdout ) {
 	me.outdent = outdent;
 	me.prompt = prompt;
 	me.lineLength = lineLength;
+	me.splitLongLines = true;
 
 	// Implementation
 	let lines = 0,
 		consecutiveNewLines = 0,
 		newLine = true,
-		indentValue = [ '  ' ];
+		indentValue = [ '  ' ],
+		promptModule = inquirer.createPromptModule();
 
 	function line( forced ) {
 		if ( !newLine ) {
@@ -68,7 +70,7 @@ function Console( lineLength = LINE_LENGTH, outputStream = process.stdout ) {
 			}
 			return;
 
-		} else if ( msg.length > me.lineLength ) {
+		} else if ( msg.length > me.lineLength && me.splitLongLines ) {
 
 			let last = msg.substring( 0, me.lineLength + 1 ).lastIndexOf( ' ' ), endFirst, startSecond;
 			if ( last > Math.min( me.lineLength / 10, 3 ) ) {
@@ -123,7 +125,7 @@ function Console( lineLength = LINE_LENGTH, outputStream = process.stdout ) {
 			write( '\n' );
 			newLine = false;
 		}
-		return inquirer.prompt( args );
+		return promptModule( args );
 	}
 
 	return me;

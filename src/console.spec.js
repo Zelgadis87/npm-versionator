@@ -4,7 +4,6 @@
 const chai = require( 'chai' )
 	, stream = require( 'stream' )
 	, chalk = require( 'chalk' )
-	, Bluebird = require( 'bluebird' )
 	, expect = chai.expect
 	;
 
@@ -108,7 +107,7 @@ describe( 'console', function() {
 		} );
 
 		it( 'Should not allow indentation symbols that ruin the layout', function() {
-			expect( () => console.indent( ) ).to.not.throw();
+			expect( () => console.indent() ).to.not.throw();
 			expect( () => console.indent( '' ), '"" is a valid indentation character' ).to.not.throw();
 			expect( () => console.indent( '!!' ), '"!!" is not a valid indentation character' ).to.throw();
 			expect( () => console.indent( 'abc' ), '"abc" is not a valid indentation chracter' ).to.throw();
@@ -187,35 +186,6 @@ describe( 'console', function() {
 			console.print( 'd' );
 			expect( testStream.output ).to.be.equal( '  a\n\n\n  b\n\n\n  c\n\n\n  d' );
 		} );
-
-	} );
-
-	describe( 'Prompting', function() {
-
-		it( 'Should introduce a new line before prompting', function() {
-			console.println( 'a' );
-			let promise = Bluebird
-				.resolve( console.prompt( { name: 'test', message: 'test 1', type: 'input' } ) )
-				.tap( () => {
-					expect( testStream.output ).to.be.equal( '  a\n' );
-				} ).tap( () => {
-					console.prompt( { name: 'test', message: 'test 2', type: 'input' } );
-				} ).tap( () => {
-					expect( testStream.output ).to.be.equal( '  a\n' );
-				} );
-			process.stdin.push( 'x\n' );
-			process.stdin.push( 'x\n' );
-			return promise;
-		} );
-
-		it( 'Should read input from the standard input', function() {
-			let promise = console.prompt( { name: 'test', message: 'test', type: 'input' } ).then( answers => {
-				expect( answers.test ).to.be.equal( 'x' );
-			} );
-			process.stdin.push( 'x\n' );
-			return promise;
-		} );
-
 
 	} );
 
