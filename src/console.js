@@ -24,7 +24,8 @@ function Console( lineLength = LINE_LENGTH, outputStream = process.stdout ) {
 	let lines = 0,
 		consecutiveNewLines = 0,
 		newLine = true,
-		indentValue = [ '  ' ];
+		indentValue = [ '  ' ],
+		promptModule = inquirer.createPromptModule();
 
 	function line( forced ) {
 		if ( !newLine ) {
@@ -124,7 +125,7 @@ function Console( lineLength = LINE_LENGTH, outputStream = process.stdout ) {
 			write( '\n' );
 			newLine = false;
 		}
-		return inquirer.prompt( args );
+		return promptModule( args );
 	}
 
 	return me;
