@@ -4,7 +4,6 @@
 const chai = require( 'chai' )
 	, stream = require( 'stream' )
 	, chalk = require( 'chalk' )
-	, Bluebird = require( 'bluebird' )
 	, expect = chai.expect
 	;
 
@@ -108,7 +107,7 @@ describe( 'console', function() {
 		} );
 
 		it( 'Should not allow indentation symbols that ruin the layout', function() {
-			expect( () => console.indent( ) ).to.not.throw();
+			expect( () => console.indent() ).to.not.throw();
 			expect( () => console.indent( '' ), '"" is a valid indentation character' ).to.not.throw();
 			expect( () => console.indent( '!!' ), '"!!" is not a valid indentation character' ).to.throw();
 			expect( () => console.indent( 'abc' ), '"abc" is not a valid indentation chracter' ).to.throw();
