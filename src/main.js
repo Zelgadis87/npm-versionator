@@ -401,8 +401,6 @@ function completeReleaseProcess() {
 		command: `npm publish --tag=${ IS_UNSTABLE ? 'unstable' : 'latest' }`
 	} );
 
-	return ask();
-
 }
 
 
