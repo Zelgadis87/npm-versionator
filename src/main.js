@@ -67,27 +67,6 @@ let log = ( m, c, level = 'info' ) => {
 	return doLog( m, c );
 };
 
-function extendInquirer( inquirer ) {
-
-	// Use VIM as default editor if no value is specified.
-	process.env.EDITOR = process.env.EDITOR || 'vim';
-
-	// Create a logger Writable stream
-	// let Writable = require( 'stream' ).Writable;
-	// let writableLogger = new Writable();
-	// writableLogger._write = ( chunk, encoding, done ) => { logger.info( chunk.toString() ); done(); };
-
-	// // Replace default inquirer prompt with a new one
-	let _prompt = inquirer.createPromptModule();
-	inquirer.prompt = ( args ) => {
-		console.print( '\n' );
-		return _prompt( args ).then( ( data ) => { console.print( '' ); return data; } );
-	};
-
-	return inquirer;
-
-}
-
 function extendBluebird( Bluebird ) {
 	Bluebird.config( {
 		// Enable warnings
@@ -548,7 +527,7 @@ async function npmTest() {
 	console.splitLongLines = false;
 
 	await npm.test( console.print, console.error )
-		.then( () => console.outdent().info( 'All tests passed.\n\n' ), ex => { console.outdent(); throw new ProcedureError( 'Tests failed.', null, ex ); } );;
+		.then( () => console.outdent().info( 'All tests passed.\n\n' ), ex => { console.outdent(); throw new ProcedureError( 'Tests failed.', null, ex ); } );
 
 	console.splitLongLines = true;
 }
