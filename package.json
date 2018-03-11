@@ -1,6 +1,6 @@
 {
   "name": "@zelgadis87/npm-versionator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An opinionated CLI tool to help versioning your NPM package",
   "keywords": [
     "NPM",
