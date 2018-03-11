@@ -1,4 +1,7 @@
 
+## v1.0.1 (2018/03/11 16:59)
+- Updated dependencies
+
 ## v1.0.1 (2018/03/11 16:58)
 - Updated dependencies
 
