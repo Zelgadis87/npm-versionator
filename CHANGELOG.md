@@ -1,4 +1,7 @@
 
+## v1.0.1 (2018/03/11 16:58)
+- Updated dependencies
+
 ## v1.0.0 (2017/11/12 03:47)
 - Breaking: Release tag is now made on the release branch instead of master
 - Added: Allow the user to see the commits log before starting a release
