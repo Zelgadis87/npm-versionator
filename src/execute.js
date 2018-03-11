@@ -11,4 +11,5 @@ async function execute( cmd ) {
 		} );
 	} ).delay( 150 );
 }
+
 module.exports = execute;
