@@ -35,7 +35,7 @@ npm.test = async function( data_out, data_err ) {
 		}
 
 		let command = /^win/.test( process.platform ) ? 'npm.cmd' : 'npm';
-		let commandArgs = [ 'test' ];
+		let commandArgs = [ '--silent', 'test' ];
 
 		let test = child_process.spawn( command, commandArgs, { env: env } );
 		test.stdout.on( 'data', x => data_out( x.toString() ) );
