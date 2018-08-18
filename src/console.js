@@ -106,9 +106,11 @@ function Console( lineLength = LINE_LENGTH, outputStream = process.stdout ) {
 		return me;
 	}
 
-	function outdent() {
-		if ( indentValue.length > 1 )
+	function outdent( n = 1 ) {
+		if ( indentValue.length > 1 ) {
 			indentValue.pop();
+			if ( n > 1 ) { return outdent( n - 1 ); }
+		}
 		return me;
 	}
 

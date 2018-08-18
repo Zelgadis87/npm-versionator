@@ -75,11 +75,29 @@ describe( 'console', function() {
 			expect( testStream.output ).to.be.equal( '  ok\n  ok' );
 		} );
 
+		it( 'Invoking console.indent and console.outdent should be idempotent', function() {
+			console.println( 'ok' );
+			console.indent();
+			console.outdent();
+			console.println( 'ok' );
+			expect( testStream.output ).to.be.equal( '  ok\n  ok' );
+		} );
+
 		it( 'Invoking console.outdent when already outdented should have no effect', function() {
 			console.println( 'ok' );
 			console.outdent();
 			console.println( 'ok' );
 			expect( testStream.output ).to.be.equal( '  ok\n  ok' );
+		} );
+
+		it( 'Invoking console.outdent with n > 1 should be equal to outdenting n times', function() {
+			console.indent();
+			console.indent();
+			console.indent();
+			console.outdent( 3 );
+			console.println( 'ok' );
+
+			expect( testStream.output ).to.be.equal( '  ok' );
 		} );
 
 		it( 'Should support infinitely nested indentations', function() {
