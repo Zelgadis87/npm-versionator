@@ -52,7 +52,8 @@ let APP_VERSION,
 	ALLOW_PRERELEASE,
 	VERSION_DONE,
 	NEXT_VERSION,
-	TASKS = []
+	TASKS = [],
+	debugOpts = {}
 	;
 
 let log = ( m, c, level = 'info' ) => {
@@ -157,7 +158,7 @@ function writeChangelogEntry( entry ) {
 
 }
 
-async function start() {
+async function start( yargs ) {
 
 	//
 	// ----------------------------------------------------
@@ -232,7 +233,7 @@ async function main() {
 		LAST_TAG = 'master';
 	} else {
 		let sv = semver( LAST_TAG ), sp = semver( PACKAGE_VERSION );
-		if ( sv.major !== sp.major || sv.minor !== sp.minor || sv.patch !== sp.patch )
+		if ( debugOpts.FAIL_ON_VERSION_MISMATCH && ( sv.major !== sp.major || sv.minor !== sp.minor || sv.patch !== sp.patch ) )
 			throw new ProcedureError( `Version mismatched, your Git repository and NPM package have diverged.\nPlease tag version ${ PACKAGE_VERSION } on your Git repository:`, `git tag ${ PACKAGE_VERSION } <commit_id>` );
 		VERSION = LAST_TAG;
 	}
@@ -270,6 +271,16 @@ async function main() {
 	// At this point, all the required settings are correct
 	//   so no more automatic failures should occur.
 	//
+
+	console.line();
+
+	console.indent( '‼' );
+	_.each( debugOpts, ( enabled, name ) => {
+		if ( !enabled ) {
+			console.warn( `Option ${ name } is disabled.` );
+		}
+	} );
+	console.outdent();
 
 	console.line();
 
@@ -566,7 +577,7 @@ function getActionsRequiredToVersionate() {
 		// Not a SemVer package
 		return [ 'Package is in an invalid version according to SemVer.' ];
 
-	if ( !EVERYTHING_COMMITTED ) {
+	if ( debugOpts.FAIL_ON_DIRTY_DIRECTORY && !EVERYTHING_COMMITTED ) {
 		// There are some files yet to be commited
 		addTask( { id: 'commit-everything', message: 'Commit all pending edits', command: `git commit -a`, restart: 1, interactive: 1, warning: 1 } );
 		return [ 'Repository not clean, please commit all your files before creating a new version:', 'git commit -a' ];
@@ -574,7 +585,7 @@ function getActionsRequiredToVersionate() {
 		removeTask( 'commit-everything' );
 	}
 
-	if ( BRANCH !== 'develop' )
+	if ( debugOpts.FAIL_ON_INVALID_BRANCH && BRANCH !== 'develop' )
 		// We are on an invalid branch
 		return [ 'Please move to the DEVELOP branch first:', 'git checkout develop' ];
 

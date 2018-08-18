@@ -2,15 +2,24 @@
 
 const Bluebird = require( 'bluebird' )
 	, process = require( 'process' )
-	, yargs = require( 'yargs' ).argv
+	, yargs = setupYargs( require( 'yargs' ) ).argv
 
 	, console = require( './src/my-console.js' )
 	, ProcedureError = require( './src/utils.js' ).ProcedureError
 	, main = require( './src/main.js' )
 	;
 
+function setupYargs( yargs ) {
+	return yargs
+		.option( 'verbose', { boolean: true, default: false, describe: 'Shows additional informations' } )
+		.option( 'failOnVersionMismatch', { boolean: true, default: true, describe: 'Aborts if there is a mismatch between Git and Npm versions' } )
+		.option( 'failOnDirtyDirectory', { boolean: true, default: true, describe: 'Aborts if there are uncommitted changes in Git' } )
+		.option( 'failOnInvalidBranch', { boolean: true, default: true, describe: 'Aborts if the current branch is not develop' } )
+		;
+}
+
 function activate() {
-	return Bluebird.resolve( main() );
+	return Bluebird.resolve( main( yargs ) );
 }
 
 Bluebird
