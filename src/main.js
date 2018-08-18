@@ -327,21 +327,27 @@ let semverFormat = ( name, type, identifier = '' ) => `${ name } ( ${ chalk.cyan
 
 function ask() {
 
+	let logErrorThenAskAgain = e => {
+		console.outdent( Number.MAX_SAFE_INTEGER );
+		console.error( e );
+		return ask();
+	};
+
 	let choices = [];
 
 	if ( !VERSION_DONE ) {
 
-		choices.push( choice( 'Create a new version', () => startReleaseProcess().then( ask ), { disabled: !ALLOW_RELEASE && !ALLOW_PRERELEASE } ) );
+		choices.push( choice( 'Create a new version', () => startReleaseProcess().then( ask, logErrorThenAskAgain ), { disabled: !ALLOW_RELEASE && !ALLOW_PRERELEASE } ) );
 
 		if ( DIFF_COMMITS > 0 ) {
-			choices.push( choice( `Show ${ DIFF_COMMITS } commits since ${ LAST_TAG }`, () => showGitLog( LAST_TAG, 'HEAD' ).then( ask ) ) );
+			choices.push( choice( `Show ${ DIFF_COMMITS } commits since ${ LAST_TAG }`, () => showGitLog( LAST_TAG, 'HEAD' ).then( ask, logErrorThenAskAgain ) ) );
 		}
 
 		if ( DIFF_MASTER_COMMITS > 0 && DIFF_MASTER_COMMITS !== DIFF_COMMITS ) {
-			choices.push( choice( `Show ${ DIFF_MASTER_COMMITS } commits since last stable release`, () => showGitLog( 'master', 'HEAD' ).then( ask ) ) );
+			choices.push( choice( `Show ${ DIFF_MASTER_COMMITS } commits since last stable release`, () => showGitLog( 'master', 'HEAD' ).then( ask, logErrorThenAskAgain ) ) );
 		}
 
-		choices.push( choice( `Execute tests`, () => npmTest().then( ask, ask ) ) );
+		choices.push( choice( `Execute tests`, () => npmTest().then( ask, logErrorThenAskAgain ) ) );
 
 		choices.push( choice( 'Check again', main ) );
 
