@@ -160,6 +160,10 @@ function writeChangelogEntry( entry ) {
 
 async function start( yargs ) {
 
+	debugOpts.FAIL_ON_VERSION_MISMATCH = yargs.failOnVersionMismatch !== false;
+	debugOpts.FAIL_ON_DIRTY_DIRECTORY = yargs.failOnDirtyDirectory !== false;
+	debugOpts.FAIL_ON_INVALID_BRANCH = yargs.failOnInvalidBranch !== false;
+
 	//
 	// ----------------------------------------------------
 	// Intro section

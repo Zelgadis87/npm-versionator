@@ -1,5 +1,5 @@
 
-## v1.0.3 (2018/08/18 20:43)
+## v1.0.4 (2018/08/18 20:52)
 - New: Allow skipping some checks using CMD options (debug only)
 
 ## v1.0.2 (2018/08/18 19:49)
