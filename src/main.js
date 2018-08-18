@@ -154,7 +154,15 @@ async function start() {
 	// Intro section
 	// ----------------------------------------------------
 	// We show the name and version of this application.
+	// We also listen for graceful process termination.
 	//
+
+	process.on( 'SIGINT', function() {
+		console.println();
+		console.title( _.padEnd( `User aborted operation.`, console.lineLength ), console.error );
+		console.println();
+		process.exit( 0 );
+	} );
 
 	console.line();
 
@@ -333,7 +341,7 @@ function ask() {
 			choices.push( choice( `Show ${ DIFF_MASTER_COMMITS } commits since last stable release`, () => showGitLog( 'master', 'HEAD' ).then( ask ) ) );
 		}
 
-		choices.push( choice( `Execute tests`, () => npmTest().catch( e => console.error( 'Tests failed' ) ).then( ask ) ) );
+		choices.push( choice( `Execute tests`, () => npmTest().then( ask, ask ) ) );
 
 		choices.push( choice( 'Check again', main ) );
 
@@ -578,7 +586,10 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 	console.line( true );
 
-	await npmTest();
+	let testsPassed;
+	await npmTest().then( () => testsPassed = true, () => testsPassed = false );
+	if ( !testsPassed )
+		throw new ProcedureError( 'Tests are failing, cannot create a new version.' );
 
 	//
 	// ----------------------------------------------------
