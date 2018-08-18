@@ -121,7 +121,17 @@ async function askForChangelog( versionType, versionNumber ) {
 		}
 	];
 
-	return console.prompt( questions ).then( answers => answers.entry );
+	return console.prompt( questions )
+		.then( answers => answers.entry )
+		.then( entry => {
+			if ( entry ) {
+				// Wait for the editor to fully close before returning the value
+				// This is a workaround to avoid an issue with inquirer asking this question right before another.
+				// Without the delay, when the editor closes, the next questions is asked but the process immediately exits afterwards.
+				return Bluebird.resolve( entry ).delay( 250 );
+			}
+			return Bluebird.resolve( entry );
+		} );
 
 }
 
