@@ -1,6 +1,8 @@
 
-## v1.0.1 (2018/03/11 16:59)
-- Updated dependencies
+## v1.0.2 (2018/08/18 19:49)
+- Fix: Tests failing no longer abort the whole process
+- Fix: Changelog entry no longer causes the process to exit in some cases
+- Change: Tests are now run in silent mode
 
 ## v1.0.1 (2018/03/11 16:58)
 - Updated dependencies

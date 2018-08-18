@@ -15,7 +15,7 @@ console.info = ( m, c ) => info( m ) & iff( c, () => command( ' ' + c ), _.noop 
 console.warn = ( m, c ) => warn( m ) & iff( c, () => command( ' ' + c ), _.noop ) & console.line();
 console.error = ( m, c ) => error( m ) & iff( c, () => command( ' ' + c ), _.noop ) & console.line();
 console.command = ( c ) => command( c ) & console.line();
-console.title = ( m ) => { let hr = _.repeat( '-', m.length ); info( hr + '\n' + m + '\n' + hr + '\n' ); };
+console.title = ( m, fn = info ) => { let hr = _.repeat( '-', m.length ); console.outdent( Number.MAX_SAFE_INTEGER ); fn( hr + '\n' + m + '\n' + hr + '\n' ); };
 
 console.task = ( t ) => {
 	console.splitLongLines = false;

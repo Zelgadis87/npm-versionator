@@ -9,6 +9,15 @@ class ProcedureError extends Error {
 
 }
 
+class ExecutionFailedError extends Error {
+
+	constructor( error_code, command, commandArgs = [] ) {
+		super( 'Execution failed with error ' + error_code );
+		this.command = command + commandArgs.join( ' ' );
+	}
+
+}
+
 function countLines( contents ) {
 	let count = -1;
 	if ( contents.length > 0 )
@@ -18,5 +27,6 @@ function countLines( contents ) {
 
 module.exports = {
 	ProcedureError: ProcedureError,
+	ExecutionFailedError: ExecutionFailedError,
 	countLines: countLines
 };

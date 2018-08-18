@@ -121,7 +121,17 @@ async function askForChangelog( versionType, versionNumber ) {
 		}
 	];
 
-	return console.prompt( questions ).then( answers => answers.entry );
+	return console.prompt( questions )
+		.then( answers => answers.entry )
+		.then( entry => {
+			if ( entry ) {
+				// Wait for the editor to fully close before returning the value
+				// This is a workaround to avoid an issue with inquirer asking this question right before another.
+				// Without the delay, when the editor closes, the next questions is asked but the process immediately exits afterwards.
+				return Bluebird.resolve( entry ).delay( 250 );
+			}
+			return Bluebird.resolve( entry );
+		} );
 
 }
 
@@ -154,7 +164,15 @@ async function start() {
 	// Intro section
 	// ----------------------------------------------------
 	// We show the name and version of this application.
+	// We also listen for graceful process termination.
 	//
+
+	process.on( 'SIGINT', function() {
+		console.println();
+		console.title( _.padEnd( `User aborted operation.`, console.lineLength ), console.error );
+		console.println();
+		process.exit( 0 );
+	} );
 
 	console.line();
 
@@ -319,21 +337,27 @@ let semverFormat = ( name, type, identifier = '' ) => `${ name } ( ${ chalk.cyan
 
 function ask() {
 
+	let logErrorThenAskAgain = e => {
+		console.outdent( Number.MAX_SAFE_INTEGER );
+		console.error( e );
+		return ask();
+	};
+
 	let choices = [];
 
 	if ( !VERSION_DONE ) {
 
-		choices.push( choice( 'Create a new version', () => startReleaseProcess().then( ask ), { disabled: !ALLOW_RELEASE && !ALLOW_PRERELEASE } ) );
+		choices.push( choice( 'Create a new version', () => startReleaseProcess().then( ask, logErrorThenAskAgain ), { disabled: !ALLOW_RELEASE && !ALLOW_PRERELEASE } ) );
 
 		if ( DIFF_COMMITS > 0 ) {
-			choices.push( choice( `Show ${ DIFF_COMMITS } commits since ${ LAST_TAG }`, () => showGitLog( LAST_TAG, 'HEAD' ).then( ask ) ) );
+			choices.push( choice( `Show ${ DIFF_COMMITS } commits since ${ LAST_TAG }`, () => showGitLog( LAST_TAG, 'HEAD' ).then( ask, logErrorThenAskAgain ) ) );
 		}
 
 		if ( DIFF_MASTER_COMMITS > 0 && DIFF_MASTER_COMMITS !== DIFF_COMMITS ) {
-			choices.push( choice( `Show ${ DIFF_MASTER_COMMITS } commits since last stable release`, () => showGitLog( 'master', 'HEAD' ).then( ask ) ) );
+			choices.push( choice( `Show ${ DIFF_MASTER_COMMITS } commits since last stable release`, () => showGitLog( 'master', 'HEAD' ).then( ask, logErrorThenAskAgain ) ) );
 		}
 
-		choices.push( choice( `Execute tests`, () => npmTest().catch( e => console.error( 'Tests failed' ) ).then( ask ) ) );
+		choices.push( choice( `Execute tests`, () => npmTest().then( ask, logErrorThenAskAgain ) ) );
 
 		choices.push( choice( 'Check again', main ) );
 
@@ -578,7 +602,12 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 	console.line( true );
 
-	await npmTest();
+	let testsPassed;
+	await npmTest().then( () => testsPassed = true, () => testsPassed = false );
+	if ( !testsPassed ) {
+		console.error( 'Tests are failing, cannot create a new version.\n' );
+		return false;
+	}
 
 	//
 	// ----------------------------------------------------
@@ -622,8 +651,10 @@ async function versionate( versionType, versionIdentifier = '' ) {
 	console.line();
 
 	let PROCEED = await askForConfirmation( NEXT_VERSION );
-	if ( !PROCEED )
-		throw new ProcedureError( 'Operation aborted by the user.' );
+	if ( !PROCEED ) {
+		console.error( '\nOperation aborted by the user.\n' );
+		return false;
+	}
 
 	//
 	// ----------------------------------------------------

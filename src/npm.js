@@ -6,6 +6,7 @@ const package = require( '../package' )
 	, _ = require( 'lodash' )
 	, supportsColor = require( 'supports-color' )
 	, ProcedureError = require( './utils.js' ).ProcedureError
+	, ExecutionFailedError = require( './utils.js' ).ExecutionFailedError
 	;
 
 let npm = {};
@@ -33,11 +34,15 @@ npm.test = async function( data_out, data_err ) {
 			env.FORCE_COLOR = env.FORCE_COLOR === undefined ? 1 : env.FORCE_COLOR;
 		}
 
-		let test = child_process.spawn( /^win/.test( process.platform ) ? 'npm.cmd' : 'npm', [ 'test' ], { env: env } );
+		let command = /^win/.test( process.platform ) ? 'npm.cmd' : 'npm';
+		let commandArgs = [ '--silent', 'test' ];
+
+		let test = child_process.spawn( command, commandArgs, { env: env } );
 		test.stdout.on( 'data', x => data_out( x.toString() ) );
 		test.stderr.on( 'data', x => data_err( x.toString() ) );
-		test.on( 'close', code => { return code === 0 ? resolve() : reject(); } );
+		test.on( 'close', code => { return code === 0 ? resolve() : reject( new ExecutionFailedError( code, command, commandArgs ) ); } );
 	} );
+
 };
 
 module.exports = npm;
