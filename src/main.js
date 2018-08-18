@@ -588,8 +588,10 @@ async function versionate( versionType, versionIdentifier = '' ) {
 
 	let testsPassed;
 	await npmTest().then( () => testsPassed = true, () => testsPassed = false );
-	if ( !testsPassed )
-		throw new ProcedureError( 'Tests are failing, cannot create a new version.' );
+	if ( !testsPassed ) {
+		console.error( 'Tests are failing, cannot create a new version.\n' );
+		return false;
+	}
 
 	//
 	// ----------------------------------------------------
@@ -633,8 +635,10 @@ async function versionate( versionType, versionIdentifier = '' ) {
 	console.line();
 
 	let PROCEED = await askForConfirmation( NEXT_VERSION );
-	if ( !PROCEED )
-		throw new ProcedureError( 'Operation aborted by the user.' );
+	if ( !PROCEED ) {
+		console.error( '\nOperation aborted by the user.\n' );
+		return false;
+	}
 
 	//
 	// ----------------------------------------------------
