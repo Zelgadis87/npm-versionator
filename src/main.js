@@ -349,6 +349,8 @@ function ask() {
 
 		choices.push( choice( 'Create a new version', () => startReleaseProcess().then( ask, logErrorThenAskAgain ), { disabled: !ALLOW_RELEASE && !ALLOW_PRERELEASE } ) );
 
+		choices.push( choice( 'Check again', main ) );
+
 		if ( DIFF_COMMITS > 0 ) {
 			choices.push( choice( `Show ${ DIFF_COMMITS } commits since ${ LAST_TAG }`, () => showGitLog( LAST_TAG, 'HEAD' ).then( ask, logErrorThenAskAgain ) ) );
 		}
@@ -358,8 +360,6 @@ function ask() {
 		}
 
 		choices.push( choice( `Execute tests`, () => npmTest().then( ask, logErrorThenAskAgain ) ) );
-
-		choices.push( choice( 'Check again', main ) );
 
 	}
 
