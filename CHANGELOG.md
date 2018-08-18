@@ -1,4 +1,7 @@
 
+## v1.0.3 (2018/08/18 20:43)
+- New: Allow skipping some checks using CMD options (debug only)
+
 ## v1.0.2 (2018/08/18 19:49)
 - Fix: Tests failing no longer abort the whole process
 - Fix: Changelog entry no longer causes the process to exit in some cases
