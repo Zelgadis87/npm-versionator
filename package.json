@@ -23,19 +23,19 @@
   "author": "Zelgadis87",
   "license": "ISC",
   "devDependencies": {
-    "chai": "^4.1.2",
-    "eslint": "^5.4.0",
-    "mocha": "^5.2.0",
-    "nyc": "^12.0.2"
+    "chai": "^4.2.0",
+    "eslint": "^7.2.0",
+    "mocha": "^8.0.1",
+    "nyc": "^15.1.0"
   },
   "dependencies": {
-    "bluebird": "^3.5.1",
-    "inquirer": "^6.1.0",
-    "lodash": "^4.17.10",
-    "moment": "^2.22.2",
-    "semver": "^5.5.1",
-    "supports-color": "^5.4.0",
-    "yargs": "^12.0.1"
+    "bluebird": "^3.7.2",
+    "inquirer": "^7.1.0",
+    "lodash": "^4.17.15",
+    "moment": "^2.26.0",
+    "semver": "^7.3.2",
+    "supports-color": "^7.1.0",
+    "yargs": "^15.3.1"
   },
   "repository": {
     "type": "git",
