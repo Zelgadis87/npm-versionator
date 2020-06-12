@@ -236,7 +236,7 @@ async function main() {
 		VERSION = PACKAGE_VERSION;
 		LAST_TAG = 'master';
 	} else {
-		let sv = semver( LAST_TAG ), sp = semver( PACKAGE_VERSION );
+		let sv = semver.parse( LAST_TAG ), sp = semver.parse( PACKAGE_VERSION );
 		if ( debugOpts.FAIL_ON_VERSION_MISMATCH && ( sv.major !== sp.major || sv.minor !== sp.minor || sv.patch !== sp.patch ) )
 			throw new ProcedureError( `Version mismatched, your Git repository and NPM package have diverged.\nPlease tag version ${ PACKAGE_VERSION } on your Git repository:`, `git tag ${ PACKAGE_VERSION } <commit_id>` );
 		VERSION = LAST_TAG;
