@@ -443,7 +443,8 @@ function completeReleaseProcess() {
 
 	addTask( {
 		message: IS_UNSTABLE ? `Publish your unstable changes to the npm repository` : `Publish your changes to the npm repository`,
-		command: `npm publish --tag=${ IS_UNSTABLE ? 'unstable' : 'latest' }`
+		command: `npm.cmd publish --tag=${ IS_UNSTABLE ? 'unstable' : 'latest' }`,
+		interactive: 1
 	} );
 
 }
