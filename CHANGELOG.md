@@ -1,4 +1,7 @@
 
+## v1.0.6 (2020/06/14 12:44)
+- Added support for NPM OTPs
+
 ## v1.0.4 (2018/08/18 20:52)
 - New: Allow skipping some checks using CMD options (debug only)
 
