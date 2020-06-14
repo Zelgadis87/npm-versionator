@@ -1,4 +1,7 @@
 
+## v1.0.7 (2020/06/14 13:50)
+- Fixed Git publish on Windows
+
 ## v1.0.6 (2020/06/14 12:44)
 - Added support for NPM OTPs
 

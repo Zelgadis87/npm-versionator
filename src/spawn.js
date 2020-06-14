@@ -4,8 +4,17 @@ const Bluebird = require( 'bluebird' )
 	;
 
 async function spawn( value ) {
-	let args = value.split( /\s+/ );
-	let cmd = args.shift();
+
+	let cmd, args;
+	if ( process.platform === 'win32' ) {
+		// See spawn_v1 for details.
+		cmd = 'cmd';
+		args = [ '/c', value ];
+	} else {
+		args = value.split( /\s+/ );
+		cmd = args.shift();
+	}
+
 	return new Bluebird( ( resolve, reject ) => {
 		let spawned = child_process.spawn( cmd, args, { stdio: [ process.stdin, process.stdout, process.stderr ] } );
 		spawned.on( 'close', code => {
