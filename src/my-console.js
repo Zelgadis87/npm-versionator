@@ -9,7 +9,7 @@ let iff = ( c, t, f ) => c ? t() : f();
 let info = ( m ) => console.print( m, chalk.green );
 let warn = ( m ) => console.print( m, chalk.yellow );
 let error = ( m ) => console.print( m, chalk.red );
-let command = ( m ) => console.print( m, chalk.cyan );
+let command = ( m ) => console.print( m.replace( 'npm.cmd', 'npm' ), chalk.cyan );
 
 console.info = ( m, c ) => info( m ) & iff( c, () => command( ' ' + c ), _.noop ) & console.line();
 console.warn = ( m, c ) => warn( m ) & iff( c, () => command( ' ' + c ), _.noop ) & console.line();
