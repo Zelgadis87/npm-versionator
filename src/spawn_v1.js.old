@@ -1,0 +1,37 @@
+
+//
+// This file contains the original spawn definition.
+// It worked correctly, but had a flaw:
+// On Windows, executing spawn( 'git log' ) would output the correct result, but after it terminated, it would leave the console ouput garbled for future commands.
+//
+// > spawn( 'git log' );
+// $ commit 2aec2640d7fc84ec495569a6a9c16bc8c9dc06af( HEAD -> develop, tag: v1.0.6, origin / develop )
+// $ Author: Gabriele Tomberli < gabriele.tomberli@gmail.com>
+// ....
+// > ←[ 1G←[ 0J > ←[ 3G
+// > ←[ 1G←[ 0J > ←[ 3G
+//
+// The output would return readable only when spawning another process that did not behave as git log.
+// The solution was to wrap the required command inside a one-shot shell for Windows.
+// The code below has been kept for historical reasons only.
+//
+
+const Bluebird = require( 'bluebird' )
+	, child_process = require( 'child_process' )
+	;
+
+async function spawn( value ) {
+	let args = value.split( /\s+/ );
+	let cmd = args.shift();
+	return new Bluebird( ( resolve, reject ) => {
+		let spawned = child_process.spawn( cmd, args, { stdio: [ process.stdin, process.stdout, process.stderr ] } );
+		spawned.on( 'close', code => {
+			if ( code === 0 )
+				return resolve();
+			return reject( new Error( 'Child process did not exit succesfully: ' + code ) );
+		} );
+	} ).delay( 150 );
+}
+
+module.exports = spawn;
+
